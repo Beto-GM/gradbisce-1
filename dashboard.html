@@ -13,44 +13,87 @@
   <a href="index.html">⏱ Timer</a>
 </nav>
 
+<!-- Zavihki -->
+<div class="tab-bar">
+  <button class="tab-btn active" data-tab="ure">⏱ Ure</button>
+  <button class="tab-btn" data-tab="stroski">💰 Stroški</button>
+</div>
+
 <div class="container">
 
-  <!-- Filter -->
-  <div class="filter-bar" id="filterBar">
-    <button class="filter-btn" data-filter="week">Ta teden</button>
-    <button class="filter-btn" data-filter="month">Ta mesec</button>
-    <button class="filter-btn" data-filter="year">Letos</button>
-    <button class="filter-btn active" data-filter="all">Vse</button>
-  </div>
+  <!-- ══ ZAVIHEK: URE ══ -->
+  <div id="tabUre">
 
-  <!-- Stat cards -->
-  <div class="stats-grid" id="statsGrid">
-    <div class="stat-card"><div class="stat-value skeleton skeleton-text" style="width:60%;margin:auto"></div><div class="stat-label">Skupno ur</div></div>
-    <div class="stat-card"><div class="stat-value skeleton skeleton-text" style="width:40%;margin:auto"></div><div class="stat-label">Aktivnih članov</div></div>
-    <div class="stat-card"><div class="stat-value skeleton skeleton-text" style="width:50%;margin:auto"></div><div class="stat-label">Delovnih dni</div></div>
-    <div class="stat-card"><div class="stat-value skeleton skeleton-text" style="width:55%;margin:auto"></div><div class="stat-label">Povprečno ur/dan</div></div>
-  </div>
-
-  <!-- Chart 1 -->
-  <div class="chart-card">
-    <h2>Ure po članu</h2>
-    <div class="chart-wrap" id="chartByMemberWrap">
-      <div class="skeleton skeleton-chart"></div>
+    <div class="filter-bar" id="filterBar">
+      <button class="filter-btn" data-filter="week">Ta teden</button>
+      <button class="filter-btn" data-filter="month">Ta mesec</button>
+      <button class="filter-btn" data-filter="year">Letos</button>
+      <button class="filter-btn active" data-filter="all">Vse</button>
     </div>
-  </div>
 
-  <!-- Chart 2 -->
-  <div class="chart-card">
-    <h2>Ure po dnevih</h2>
-    <div class="chart-wrap" id="chartByDayWrap">
-      <div class="skeleton skeleton-chart"></div>
+    <div class="stats-grid" id="statsGrid">
+      <div class="stat-card"><div class="stat-label">Skupno ur</div><div class="stat-value skeleton skeleton-text" style="width:60%"></div></div>
+      <div class="stat-card"><div class="stat-label">Aktivnih članov</div><div class="stat-value skeleton skeleton-text" style="width:40%"></div></div>
+      <div class="stat-card"><div class="stat-label">Delovnih dni</div><div class="stat-value skeleton skeleton-text" style="width:50%"></div></div>
+      <div class="stat-card"><div class="stat-label">Povprečno</div><div class="stat-value skeleton skeleton-text" style="width:55%"></div></div>
     </div>
+
+    <div class="chart-card">
+      <h2>Ure po članu</h2>
+      <div class="chart-wrap" id="chartByMemberWrap">
+        <div class="skeleton skeleton-chart"></div>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <h2>Ure po dnevih</h2>
+      <div class="chart-wrap" id="chartByDayWrap">
+        <div class="skeleton skeleton-chart"></div>
+      </div>
+    </div>
+
+    <div class="table-card" id="tableCard">
+      <h2>Vsi vnosi</h2>
+      <div class="skeleton skeleton-chart" style="margin:1rem"></div>
+    </div>
+
   </div>
 
-  <!-- Table -->
-  <div class="table-card" id="tableCard">
-    <h2>Vsi vnosi</h2>
-    <div class="skeleton skeleton-chart"></div>
+  <!-- ══ ZAVIHEK: STROŠKI ══ -->
+  <div id="tabStroski" hidden>
+
+    <div class="filter-bar" id="filterBarStroski">
+      <button class="filter-btn" data-filter="week">Ta teden</button>
+      <button class="filter-btn" data-filter="month">Ta mesec</button>
+      <button class="filter-btn active" data-filter="all">Vse</button>
+    </div>
+
+    <div class="stats-grid" id="statsGridStroski">
+      <div class="stat-card"><div class="stat-label">Skupaj</div><div class="stat-value skeleton skeleton-text" style="width:60%"></div></div>
+      <div class="stat-card"><div class="stat-label">Vnosov</div><div class="stat-value skeleton skeleton-text" style="width:40%"></div></div>
+      <div class="stat-card"><div class="stat-label">Največji strošek</div><div class="stat-value skeleton skeleton-text" style="width:50%"></div></div>
+      <div class="stat-card"><div class="stat-label">Povprečno</div><div class="stat-value skeleton skeleton-text" style="width:55%"></div></div>
+    </div>
+
+    <div class="chart-card">
+      <h2>Stroški po kategoriji</h2>
+      <div class="chart-wrap" id="chartByKatWrap">
+        <div class="skeleton skeleton-chart"></div>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <h2>Stroški po osebi</h2>
+      <div class="chart-wrap" id="chartByOsebaWrap">
+        <div class="skeleton skeleton-chart"></div>
+      </div>
+    </div>
+
+    <div class="table-card" id="tableCardStroski">
+      <h2>Vsi stroški</h2>
+      <div class="skeleton skeleton-chart" style="margin:1rem"></div>
+    </div>
+
   </div>
 
 </div>

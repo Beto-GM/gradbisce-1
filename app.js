@@ -1,11 +1,11 @@
-const API_URL = "https://script.google.com/macros/s/AKfycbyy4vnG0CAdWkKw8WatFk-8fwhBtngVbl5L4yzDwTuyG54LssIebHNo2WZoRgCqOmhh/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbxzvKCqFkyeebsByJH2o_yr7jHApv923P3cpnJ9v26WbHUduOuymVh1PF35A2heMe9v/exec";
 const ČLANI = ["Franci", "Gašper", "Mitja", "David", "Filip", "Erik"];
 const CROWN = "Franci";
 const LS_KEY = "aktivna_seja";
 
 let selectedMember = null;
 let timerInterval = null;
-let sessionStart = null; // Date object
+let sessionStart = null;
 
 // ── Build member grid ──
 const grid = document.getElementById("memberGrid");
@@ -17,7 +17,7 @@ const grid = document.getElementById("memberGrid");
     <div class="member-avatar">${ime[0]}</div>
     <div class="member-info">
       <span class="member-name">${ime === CROWN ? ime + " 👑" : ime}</span>
-      <span class="member-status" id="status-${ime}">Prosto</span>
+      <span class="member-status">Prosto</span>
     </div>
   `;
   btn.addEventListener("click", () => selectMember(ime));
@@ -39,7 +39,7 @@ if (saved) {
 }
 
 function selectMember(ime) {
-  if (timerInterval) return; // ignore clicks while timer runs
+  if (timerInterval) return;
   selectedMember = ime;
   highlightMember(ime);
   renderSelected();
@@ -51,29 +51,24 @@ function highlightMember(ime) {
     b.classList.toggle("active", active);
     const statusEl = b.querySelector(".member-status");
     if (statusEl) {
-      if (active && timerInterval) {
-        statusEl.textContent = "● Dela...";
-      } else {
-        statusEl.textContent = "Prosto";
-      }
+      statusEl.textContent = (active && timerInterval) ? "● Dela..." : "Prosto";
     }
   });
 }
 
-// ── Stanje 2: član izbran, timer ne teče ──
+// ── Stanje 2: član izbran, nobena akcija ni aktivna ──
 function renderSelected() {
   const area = document.getElementById("actionArea");
   area.innerHTML = `
-    <span class="session-label">Aktivna seja</span>
-    <div class="selected-name">${selectedMember}</div>
-    <div class="timer-box" style="width:100%">
-      <div class="timer-display muted">00:00:00</div>
-      <div class="start-info">Pritisni ▶ za začetek</div>
+    <span class="session-label">Izberi akcijo — ${selectedMember}</span>
+    <div class="action-buttons">
+      <button class="btn btn-filled btn-large" id="btnStart">▶ Začni beleženje ur</button>
+      <button class="btn btn-outlined btn-large" id="btnStrosek">💰 Dodaj strošek</button>
     </div>
-    <button class="btn btn-primary btn-large" id="btnStart">▶ ZAČNI DELO</button>
-    <button class="btn btn-secondary" id="btnCancel">Prekliči</button>
+    <button class="btn btn-text" id="btnCancel">Prekliči izbiro</button>
   `;
   document.getElementById("btnStart").addEventListener("click", startTimer);
+  document.getElementById("btnStrosek").addEventListener("click", showStrosekModal);
   document.getElementById("btnCancel").addEventListener("click", cancel);
 }
 
@@ -114,7 +109,6 @@ function renderTimerRunning() {
   clearInterval(timerInterval);
   timerInterval = setInterval(tickTimer, 1000);
   tickTimer();
-  // posodobi status na kartici
   highlightMember(selectedMember);
 }
 
@@ -127,7 +121,7 @@ function tickTimer() {
   if (el) el.textContent = `${h}:${m}:${s}`;
 }
 
-// ── Stop: ustavi timer, prikaži modal ──
+// ── Stop: ustavi timer, prikaži modal za opis dela ──
 function stopTimer() {
   clearInterval(timerInterval);
   timerInterval = null;
@@ -144,19 +138,19 @@ function stopTimer() {
     datum: formatDate(sessionStart),
     zacetek: formatTime(sessionStart),
     konec: formatTime(konec),
-    ure: ure
+    ure
   };
 
-  showModal(basePayload, prikazH, prikazMin);
+  showDeloModal(basePayload, prikazH, prikazMin);
 }
 
-// ── Modal ──
+// ── Modal: opis dela (po zaključku timerja) ──
 const DELA = [
   "Betonaža", "Opaženje", "Hidro izolacija", "Toplotna izolacija",
   "Štemanje", "Priprava / razno", "Razno", "Delo z ostrešjem", "Delo z lesom"
 ];
 
-function showModal(payload, prikazH, prikazMin) {
+function showDeloModal(payload, prikazH, prikazMin) {
   const modal = document.createElement("div");
   modal.id = "kajModal";
   modal.className = "modal-overlay";
@@ -164,7 +158,7 @@ function showModal(payload, prikazH, prikazMin) {
     <div class="modal-card">
       <h2 class="modal-title">Kaj si delal? 👷</h2>
       <p class="modal-subtitle">Izberi ali napiši kratek opis dela</p>
-      <div class="chip-grid" id="chipGrid">
+      <div class="chip-grid">
         ${DELA.map(d => `<button class="chip" data-dela="${d}">${d}</button>`).join("")}
       </div>
       <input class="modal-input" id="modalInput" type="text" placeholder="Ali napiši svoje…" maxlength="60">
@@ -174,7 +168,6 @@ function showModal(payload, prikazH, prikazMin) {
   `;
   document.body.appendChild(modal);
 
-  // chip klik
   modal.querySelectorAll(".chip").forEach(chip => {
     chip.addEventListener("click", () => {
       modal.querySelectorAll(".chip").forEach(c => c.classList.remove("selected"));
@@ -185,29 +178,83 @@ function showModal(payload, prikazH, prikazMin) {
 
   document.getElementById("btnConfirm").addEventListener("click", () => {
     const kaj = document.getElementById("modalInput").value.trim();
-    closeModal();
-    sendPayload({ ...payload, kaj }, prikazH, prikazMin);
+    closeModal("kajModal");
+    sendUrePayload({ ...payload, kaj }, prikazH, prikazMin);
   });
 
   document.getElementById("btnSkip").addEventListener("click", () => {
-    closeModal();
-    sendPayload({ ...payload, kaj: "" }, prikazH, prikazMin);
+    closeModal("kajModal");
+    sendUrePayload({ ...payload, kaj: "" }, prikazH, prikazMin);
   });
 }
 
-function closeModal() {
-  const m = document.getElementById("kajModal");
+// ── Modal: strošek ──
+const KATEGORIJE = [
+  "🧱 Beton / malte", "🪵 Les / opaženje", "🔧 Orodje",
+  "🏠 Izolacija", "🚗 Transport", "📦 Material / ostalo"
+];
+
+function showStrosekModal() {
+  const modal = document.createElement("div");
+  modal.id = "strosekModal";
+  modal.className = "modal-overlay";
+  modal.innerHTML = `
+    <div class="modal-card">
+      <h2 class="modal-title">💰 Dodaj strošek</h2>
+      <p class="modal-subtitle">Izberi kategorijo in vnesi znesek</p>
+      <div class="chip-grid">
+        ${KATEGORIJE.map(k => `<button class="chip" data-kat="${k}">${k}</button>`).join("")}
+      </div>
+      <input class="modal-input" id="strosekOpis" type="text" placeholder="Natančnejši opis (neobvezno)" maxlength="80">
+      <div class="znesek-row">
+        <label class="modal-label" for="strosekZnesek">Znesek (€)</label>
+        <input class="modal-input znesek-input" id="strosekZnesek" type="number" placeholder="0.00" min="0" step="0.01">
+      </div>
+      <button class="btn btn-filled btn-large" id="btnStrosekSave" disabled>✅ Shrani strošek</button>
+      <button class="btn btn-secondary modal-skip" id="btnStrosekCancel">Prekliči</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  modal.querySelectorAll(".chip").forEach(chip => {
+    chip.addEventListener("click", () => {
+      modal.querySelectorAll(".chip").forEach(c => c.classList.remove("selected"));
+      chip.classList.add("selected");
+      document.getElementById("strosekOpis").value = chip.dataset.kat;
+    });
+  });
+
+  const znesekInput = document.getElementById("strosekZnesek");
+  const btnSave = document.getElementById("btnStrosekSave");
+  znesekInput.addEventListener("input", () => {
+    btnSave.disabled = !znesekInput.value || parseFloat(znesekInput.value) <= 0;
+  });
+
+  btnSave.addEventListener("click", () => {
+    const predmet = document.getElementById("strosekOpis").value.trim();
+    const vrednost = parseFloat(znesekInput.value);
+    closeModal("strosekModal");
+    sendStrosekPayload(predmet, vrednost);
+  });
+
+  document.getElementById("btnStrosekCancel").addEventListener("click", () => {
+    closeModal("strosekModal");
+    renderSelected();
+  });
+}
+
+function closeModal(id) {
+  const m = document.getElementById(id);
   if (m) m.remove();
 }
 
-// ── Pošlji na API ──
-async function sendPayload(payload, prikazH, prikazMin) {
+// ── Pošlji ure na API ──
+async function sendUrePayload(payload, prikazH, prikazMin) {
   const area = document.getElementById("actionArea");
   area.innerHTML = `
     <div class="selected-name">${payload.ime}</div>
     <div style="display:flex;align-items:center;gap:.75rem;color:var(--text-muted)">
-      <span class="spinner" style="border-color:rgba(0,0,0,.2);border-top-color:#555"></span>
-      Pošiljam…
+      <span class="spinner"></span> Pošiljam…
     </div>
   `;
 
@@ -234,9 +281,51 @@ async function sendPayload(payload, prikazH, prikazMin) {
       </div>
       <button class="btn btn-danger" id="btnRetry">Poskusi znova</button>
     `;
-    document.getElementById("btnRetry").addEventListener("click", () => {
-      renderTimerRunning();
+    document.getElementById("btnRetry").addEventListener("click", () => renderTimerRunning());
+  }
+}
+
+// ── Pošlji strošek na API ──
+async function sendStrosekPayload(predmet, vrednost) {
+  const area = document.getElementById("actionArea");
+  area.innerHTML = `
+    <div class="selected-name">${selectedMember}</div>
+    <div style="display:flex;align-items:center;gap:.75rem;color:var(--text-muted)">
+      <span class="spinner"></span> Shranjujem…
+    </div>
+  `;
+
+  const payload = {
+    type: "strosek",
+    ime: selectedMember,
+    datum: formatDate(new Date()),
+    predmet,
+    vrednost
+  };
+
+  try {
+    await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      mode: "no-cors"
     });
+
+    const prikazPredmet = predmet || "—";
+    area.innerHTML = `
+      <div class="result-card success">
+        ✅ Strošek shranjen!<br>${selectedMember}: ${prikazPredmet} — ${vrednost.toFixed(2)} €
+      </div>
+    `;
+    setTimeout(resetAll, 3000);
+  } catch (err) {
+    area.innerHTML = `
+      <div class="result-card error">
+        ❌ Napaka pri pošiljanju:<br>${err.message}
+      </div>
+      <button class="btn btn-danger" id="btnRetryS">Poskusi znova</button>
+    `;
+    document.getElementById("btnRetryS").addEventListener("click", () => renderSelected());
   }
 }
 
