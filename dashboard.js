@@ -1,18 +1,16 @@
 const API_URL = "https://script.google.com/macros/s/AKfycbyy4vnG0CAdWkKw8WatFk-8fwhBtngVbl5L4yzDwTuyG54LssIebHNo2WZoRgCqOmhh/exec";
 const ČLANI = ["Franci", "Gašper", "Mitja", "David", "Filip", "Erik"];
 const BARVE = {
-  Franci: "#4285F4",
-  Gašper: "#34A853",
-  Mitja:  "#FBBC04",
-  David:  "#EA4335",
-  Filip:  "#9C27B0",
-  Erik:   "#00BCD4"
+  Franci: "#C4581A",
+  Gašper: "#8B4513",
+  Mitja:  "#A07850",
+  David:  "#B8864E",
+  Filip:  "#C49A6C",
+  Erik:   "#D4B48A"
 };
 
 let allData = [];
 let activeFilter = "all";
-let chartMember = null;
-let chartDay = null;
 
 // ── Fetch ──
 async function loadData() {
@@ -36,14 +34,15 @@ function normalise(raw) {
   const list = Array.isArray(raw) ? raw : (raw.data || raw.values || []);
   return list.map(r => {
     if (Array.isArray(r)) {
-      return { ime: r[0], datum: r[1], zacetek: r[2], konec: r[3], ure: parseFloat(r[4]) || 0 };
+      return { ime: r[0], datum: r[1], zacetek: r[2], konec: r[3], ure: parseFloat(r[4]) || 0, kaj: r[5] || "" };
     }
     return {
       ime: r.ime || r.Ime || "",
       datum: r.datum || r.Datum || "",
       zacetek: r.zacetek || r.Zacetek || r.Začetek || "",
       konec: r.konec || r.Konec || "",
-      ure: parseFloat(r.ure || r.Ure || 0)
+      ure: parseFloat(r.ure || r.Ure || 0),
+      kaj: r.kaj || r.Kaj || ""
     };
   }).filter(r => r.ime && r.datum);
 }
@@ -111,17 +110,22 @@ function renderStats(data) {
   const dni = new Set(data.map(r => r.datum)).size;
   const povprecje = dni > 0 ? skupajUr / dni : 0;
 
-  document.getElementById("statsGrid").innerHTML = `
-    <div class="stat-card"><div class="stat-value">${skupajUr.toFixed(1)}</div><div class="stat-label">Skupno ur</div></div>
-    <div class="stat-card"><div class="stat-value">${aktivnih}</div><div class="stat-label">Aktivnih članov</div></div>
-    <div class="stat-card"><div class="stat-value">${dni}</div><div class="stat-label">Delovnih dni</div></div>
-    <div class="stat-card"><div class="stat-value">${povprecje.toFixed(1)}</div><div class="stat-label">Povprečno ur/dan</div></div>
-  `;
+  function card(label, value, unit) {
+    return `<div class="stat-card">
+      <div class="stat-label">${label}</div>
+      <div class="stat-value">${value} <span class="stat-unit">${unit}</span></div>
+    </div>`;
+  }
+
+  document.getElementById("statsGrid").innerHTML =
+    card("Skupno ur", skupajUr.toFixed(1), "ur") +
+    card("Aktivnih članov", aktivnih, "os.") +
+    card("Delovnih dni", dni, "dni") +
+    card("Povprečno", povprecje.toFixed(1), "ur/dan");
 }
 
-// ── Graf 1: Ure po članu (horizontalni bar) ──
+// ── Graf 1: CSS horizontalni stolpci po članu ──
 function renderChartByMember(data) {
-  // Seštej ure po članu
   const byMember = {};
   ČLANI.forEach(ime => { byMember[ime] = 0; });
   data.forEach(r => {
@@ -133,125 +137,87 @@ function renderChartByMember(data) {
     .filter(([, v]) => v > 0)
     .sort((a, b) => b[1] - a[1]);
 
-  const labels = sorted.map(([ime]) => ime);
-  const values = sorted.map(([, v]) => v);
-  const colors = labels.map(ime => BARVE[ime] || "#999");
+  if (sorted.length === 0) {
+    document.getElementById("chartByMemberWrap").innerHTML = `<div class="empty-state" style="padding:1rem">Ni podatkov</div>`;
+    return;
+  }
 
-  const wrap = document.getElementById("chartByMemberWrap");
-  wrap.innerHTML = `<canvas id="chartMember"></canvas>`;
+  const max = sorted[0][1];
 
-  if (chartMember) chartMember.destroy();
-  chartMember = new Chart(document.getElementById("chartMember"), {
-    type: "bar",
-    data: {
-      labels,
-      datasets: [{
-        data: values,
-        backgroundColor: colors,
-        borderRadius: 6
-      }]
-    },
-    options: {
-      indexAxis: "y",
-      responsive: true,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: { label: ctx => ` ${ctx.raw.toFixed(2)} ur` }
-        },
-        datalabels: false
-      },
-      scales: {
-        x: { beginAtZero: true, title: { display: true, text: "Ure" } },
-        y: { ticks: { font: { weight: "bold" } } }
-      }
-    },
-    plugins: [{
-      id: "endLabels",
-      afterDatasetsDraw(chart) {
-        const { ctx } = chart;
-        chart.data.datasets.forEach((ds, di) => {
-          chart.getDatasetMeta(di).data.forEach((bar, i) => {
-            const val = ds.data[i];
-            ctx.fillStyle = "#333";
-            ctx.font = "bold 12px system-ui";
-            ctx.textAlign = "left";
-            ctx.textBaseline = "middle";
-            ctx.fillText(`${val.toFixed(1)} ur`, bar.x + 6, bar.y);
-          });
-        });
-      }
-    }]
-  });
+  const rows = sorted.map(([ime, v]) => {
+    const pct = max > 0 ? (v / max) * 100 : 0;
+    const color = BARVE[ime] || "#A07850";
+    return `<div class="bar-row">
+      <span class="bar-name">${ime}</span>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:${pct.toFixed(1)}%;background:${color}">
+          <span class="bar-fill-value">${v.toFixed(1)} ur</span>
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+
+  document.getElementById("chartByMemberWrap").innerHTML = `<div class="bar-chart-member">${rows}</div>`;
 }
 
-// ── Graf 2: Ure po dnevih (stacked vertical bar) ──
+// ── Graf 2: CSS navpični stolpci po dnevih ──
 function renderChartByDay(data) {
-  // Zberi zadnjih 30 dni ki imajo vnos
   const byDay = {};
   data.forEach(r => {
-    if (!byDay[r.datum]) byDay[r.datum] = {};
-    byDay[r.datum][r.ime] = (byDay[r.datum][r.ime] || 0) + r.ure;
+    if (!byDay[r.datum]) byDay[r.datum] = 0;
+    byDay[r.datum] += r.ure;
   });
 
   const sortedDays = Object.keys(byDay)
     .sort((a, b) => parseDate(a) - parseDate(b))
     .slice(-30);
 
-  const labels = sortedDays.map(d => d.slice(0, 5)); // DD.MM
+  if (sortedDays.length === 0) {
+    document.getElementById("chartByDayWrap").innerHTML = `<div class="empty-state" style="padding:1rem">Ni podatkov</div>`;
+    return;
+  }
 
-  const datasets = ČLANI.map(ime => ({
-    label: ime,
-    data: sortedDays.map(d => byDay[d]?.[ime] || 0),
-    backgroundColor: BARVE[ime] || "#999",
-    borderRadius: 4,
-    stack: "stack"
-  })).filter(ds => ds.data.some(v => v > 0));
+  const maxDay = Math.max(...sortedDays.map(d => byDay[d]));
 
-  const wrap = document.getElementById("chartByDayWrap");
-  wrap.innerHTML = `<canvas id="chartDay"></canvas>`;
+  const cols = sortedDays.map(d => {
+    const pct = maxDay > 0 ? (byDay[d] / maxDay) * 100 : 0;
+    const label = d.slice(0, 5); // DD.MM
+    return `<div class="day-col">
+      <div class="day-fill" style="height:${pct.toFixed(1)}%"></div>
+      <span class="day-label">${label}</span>
+    </div>`;
+  }).join("");
 
-  if (chartDay) chartDay.destroy();
-  chartDay = new Chart(document.getElementById("chartDay"), {
-    type: "bar",
-    data: { labels, datasets },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { position: "bottom", labels: { boxWidth: 14, font: { size: 12 } } },
-        tooltip: {
-          callbacks: {
-            label: ctx => ` ${ctx.dataset.label}: ${ctx.raw.toFixed(2)} ur`
-          }
-        }
-      },
-      scales: {
-        x: { stacked: true, ticks: { maxRotation: 45 } },
-        y: { stacked: true, beginAtZero: true, title: { display: true, text: "Ure" } }
-      }
-    }
-  });
+  document.getElementById("chartByDayWrap").innerHTML =
+    `<div class="bar-chart-day"><div class="day-bars-wrap">${cols}</div></div>`;
 }
 
 // ── Tabela ──
 function renderTable(data) {
   const sorted = [...data].sort((a, b) => parseDate(b.datum) - parseDate(a.datum));
 
-  const rows = sorted.map(r => `
-    <tr>
+  const rows = sorted.map(r => {
+    const deloBadge = r.kaj
+      ? `<span class="delo-badge">${r.kaj}</span>`
+      : `<span style="color:var(--text-hint);font-size:0.8rem">—</span>`;
+    return `<tr>
       <td>${r.datum}</td>
       <td>${r.ime}</td>
       <td>${r.zacetek}</td>
       <td>${r.konec}</td>
       <td>${parseFloat(r.ure).toFixed(2)}</td>
-    </tr>`).join("");
+      <td>${deloBadge}</td>
+    </tr>`;
+  }).join("");
 
   document.getElementById("tableCard").innerHTML = `
     <h2>Vsi vnosi</h2>
-    <table>
-      <thead><tr><th>Datum</th><th>Ime</th><th>Začetek</th><th>Konec</th><th>Ure</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Datum</th><th>Ime</th><th>Začetek</th><th>Konec</th><th>Ure</th><th>Delo</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
     <p class="table-note">💡 Za ročne popravke odpri Google Sheets → stolpci: Ime | Datum (DD.MM.YYYY) | Začetek (HH:MM) | Konec (HH:MM) | Ure (decimalno)</p>
   `;
 }

@@ -13,7 +13,13 @@ const grid = document.getElementById("memberGrid");
   const btn = document.createElement("button");
   btn.className = "member-btn";
   btn.dataset.ime = ime;
-  btn.textContent = ime === CROWN ? `${ime} 👑` : ime;
+  btn.innerHTML = `
+    <div class="member-avatar">${ime[0]}</div>
+    <div class="member-info">
+      <span class="member-name">${ime === CROWN ? ime + " 👑" : ime}</span>
+      <span class="member-status" id="status-${ime}">Prosto</span>
+    </div>
+  `;
   btn.addEventListener("click", () => selectMember(ime));
   grid.appendChild(btn);
 });
@@ -41,7 +47,16 @@ function selectMember(ime) {
 
 function highlightMember(ime) {
   document.querySelectorAll(".member-btn").forEach(b => {
-    b.classList.toggle("active", b.dataset.ime === ime);
+    const active = b.dataset.ime === ime;
+    b.classList.toggle("active", active);
+    const statusEl = b.querySelector(".member-status");
+    if (statusEl) {
+      if (active && timerInterval) {
+        statusEl.textContent = "● Dela...";
+      } else {
+        statusEl.textContent = "Prosto";
+      }
+    }
   });
 }
 
@@ -49,7 +64,12 @@ function highlightMember(ime) {
 function renderSelected() {
   const area = document.getElementById("actionArea");
   area.innerHTML = `
+    <span class="session-label">Aktivna seja</span>
     <div class="selected-name">${selectedMember}</div>
+    <div class="timer-box" style="width:100%">
+      <div class="timer-display muted">00:00:00</div>
+      <div class="start-info">Pritisni ▶ za začetek</div>
+    </div>
     <button class="btn btn-primary btn-large" id="btnStart">▶ ZAČNI DELO</button>
     <button class="btn btn-secondary" id="btnCancel">Prekliči</button>
   `;
@@ -76,12 +96,15 @@ function renderTimerRunning() {
   const datumStr = formatDate(sessionStart);
 
   area.innerHTML = `
+    <span class="session-label">Aktivna seja</span>
     <div class="selected-name">${selectedMember}</div>
-    <div class="start-info">Začetek: ${datumStr} ob ${zacetekStr}</div>
+    <div class="timer-box" style="width:100%">
+      <div class="timer-display" id="timerDisplay">00:00:00</div>
+      <div class="start-info">Začetek ob ${zacetekStr} · ${datumStr}</div>
+    </div>
     <div class="recording-indicator">
       <span class="pulse-dot"></span> SNEMAM
     </div>
-    <div class="timer-display" id="timerDisplay">00:00:00</div>
     <button class="btn btn-danger btn-large" id="btnStop">⏹ ZAKLJUČI DELO</button>
     <p class="warning-text">⚠️ Ne zapri okna med delom!</p>
   `;
@@ -91,6 +114,8 @@ function renderTimerRunning() {
   clearInterval(timerInterval);
   timerInterval = setInterval(tickTimer, 1000);
   tickTimer();
+  // posodobi status na kartici
+  highlightMember(selectedMember);
 }
 
 function tickTimer() {
