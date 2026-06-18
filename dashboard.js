@@ -16,6 +16,23 @@ let strosekData = [];
 let strosekFilter = "all";
 let strosekLoaded = false;
 
+// ── Očisti datum — odstrani GMT timezone napis ──
+function cleanDatum(str) {
+  if (!str) return '';
+  const s = String(str);
+  // Že v formatu DD.MM.YYYY
+  const match = s.match(/\d{1,2}\.\d{1,2}\.\d{4}/);
+  if (match) return match[0];
+  // Pretvori iz polnega Date stringa (npr. "Thu Jun 18 2026 GMT+0100...")
+  const d = new Date(s);
+  if (!isNaN(d)) {
+    return String(d.getDate()).padStart(2, '0') + '.' +
+           String(d.getMonth() + 1).padStart(2, '0') + '.' +
+           d.getFullYear();
+  }
+  return s;
+}
+
 // ── Tab switching ──
 document.querySelectorAll(".tab-btn").forEach(btn => {
   btn.addEventListener("click", () => {
@@ -48,11 +65,11 @@ function normalise(raw) {
   const list = Array.isArray(raw) ? raw : (raw.rows || raw.data || raw.values || []);
   return list.map(r => {
     if (Array.isArray(r)) {
-      return { ime: r[0], datum: r[1], zacetek: r[2], konec: r[3], ure: parseFloat(r[4]) || 0, kaj: r[5] || "" };
+      return { ime: r[0], datum: cleanDatum(r[1]), zacetek: r[2], konec: r[3], ure: parseFloat(r[4]) || 0, kaj: r[5] || "" };
     }
     return {
       ime: r.ime || r.Ime || "",
-      datum: r.datum || r.Datum || "",
+      datum: cleanDatum(r.datum || r.Datum || ""),
       zacetek: r.zacetek || r.Zacetek || r.Začetek || "",
       konec: r.konec || r.Konec || "",
       ure: parseFloat(r.ure || r.Ure || 0),
@@ -205,11 +222,11 @@ function normaliseStrosek(raw) {
   const list = Array.isArray(raw) ? raw : (raw.rows || raw.data || raw.values || []);
   return list.map(r => {
     if (Array.isArray(r)) {
-      return { ime: r[0], datum: r[1], predmet: r[2] || "", vrednost: parseFloat(r[3]) || 0 };
+      return { ime: r[0], datum: cleanDatum(r[1]), predmet: r[2] || "", vrednost: parseFloat(r[3]) || 0 };
     }
     return {
       ime: r.ime || r.Ime || "",
-      datum: r.datum || r.Datum || "",
+      datum: cleanDatum(r.datum || r.Datum || ""),
       predmet: r.predmet || r.Predmet || "",
       vrednost: parseFloat(r.vrednost || r.Vrednost || 0)
     };
