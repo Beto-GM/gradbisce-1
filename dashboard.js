@@ -45,7 +45,7 @@ async function loadData() {
 
 function normalise(raw) {
   if (!raw) return [];
-  const list = Array.isArray(raw) ? raw : (raw.data || raw.values || []);
+  const list = Array.isArray(raw) ? raw : (raw.rows || raw.data || raw.values || []);
   return list.map(r => {
     if (Array.isArray(r)) {
       return { ime: r[0], datum: r[1], zacetek: r[2], konec: r[3], ure: parseFloat(r[4]) || 0, kaj: r[5] || "" };
@@ -202,7 +202,7 @@ async function loadStrosekData() {
 
 function normaliseStrosek(raw) {
   if (!raw) return [];
-  const list = Array.isArray(raw) ? raw : (raw.data || raw.values || []);
+  const list = Array.isArray(raw) ? raw : (raw.rows || raw.data || raw.values || []);
   return list.map(r => {
     if (Array.isArray(r)) {
       return { ime: r[0], datum: r[1], predmet: r[2] || "", vrednost: parseFloat(r[3]) || 0 };
@@ -259,7 +259,6 @@ function renderChartByKat(data) {
   const sorted = Object.entries(byKat).sort((a, b) => b[1] - a[1]);
   if (!sorted.length) { document.getElementById("chartByKatWrap").innerHTML = ""; return; }
   const max = sorted[0][1];
-  // Earth-tone palette za kategorije
   const katBarve = ["#C4581A","#8B4513","#A07850","#B8864E","#C49A6C","#D4B48A","#6B3A2A","#9B6E4A"];
   const rows = sorted.map(([kat, v], i) => {
     const pct = max > 0 ? (v / max) * 100 : 0;
