@@ -1,4 +1,4 @@
-const API_URL = "https://script.google.com/macros/s/AKfycbwIXW--hiEXbZ3-JnO6cYDK_8rRtF-PTl7-GHS3j-6wlXZQAL_Iwdc3WFUxm0bOG_6r/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbyy4vnG0CAdWkKw8WatFk-8fwhBtngVbl5L4yzDwTuyG54LssIebHNo2WZoRgCqOmhh/exec";
 const ČLANI = ["Franci", "Gašper", "Mitja", "David", "Filip", "Erik"];
 const CROWN = "Franci";
 const LS_KEY = "aktivna_seja";
@@ -102,8 +102,8 @@ function tickTimer() {
   if (el) el.textContent = `${h}:${m}:${s}`;
 }
 
-// ── Stop & send ──
-async function stopTimer() {
+// ── Stop: ustavi timer, prikaži modal ──
+function stopTimer() {
   clearInterval(timerInterval);
   timerInterval = null;
 
@@ -114,7 +114,7 @@ async function stopTimer() {
   const prikazH = Math.floor(totalMin / 60);
   const prikazMin = totalMin % 60;
 
-  const payload = {
+  const basePayload = {
     ime: selectedMember,
     datum: formatDate(sessionStart),
     zacetek: formatTime(sessionStart),
@@ -122,12 +122,69 @@ async function stopTimer() {
     ure: ure
   };
 
+  showModal(basePayload, prikazH, prikazMin);
+}
+
+// ── Modal ──
+const DELA = [
+  "Betonaža", "Opaženje", "Hidro izolacija", "Toplotna izolacija",
+  "Štemanje", "Priprava / razno", "Razno", "Delo z ostrešjem", "Delo z lesom"
+];
+
+function showModal(payload, prikazH, prikazMin) {
+  const modal = document.createElement("div");
+  modal.id = "kajModal";
+  modal.className = "modal-overlay";
+  modal.innerHTML = `
+    <div class="modal-card">
+      <h2 class="modal-title">Kaj si delal? 👷</h2>
+      <p class="modal-subtitle">Izberi ali napiši kratek opis dela</p>
+      <div class="chip-grid" id="chipGrid">
+        ${DELA.map(d => `<button class="chip" data-dela="${d}">${d}</button>`).join("")}
+      </div>
+      <input class="modal-input" id="modalInput" type="text" placeholder="Ali napiši svoje…" maxlength="60">
+      <button class="btn btn-primary btn-large" id="btnConfirm">✅ Potrdi in shrani</button>
+      <button class="btn btn-secondary modal-skip" id="btnSkip">Preskoči</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  // chip klik
+  modal.querySelectorAll(".chip").forEach(chip => {
+    chip.addEventListener("click", () => {
+      modal.querySelectorAll(".chip").forEach(c => c.classList.remove("selected"));
+      chip.classList.add("selected");
+      document.getElementById("modalInput").value = chip.dataset.dela;
+    });
+  });
+
+  document.getElementById("btnConfirm").addEventListener("click", () => {
+    const kaj = document.getElementById("modalInput").value.trim();
+    closeModal();
+    sendPayload({ ...payload, kaj }, prikazH, prikazMin);
+  });
+
+  document.getElementById("btnSkip").addEventListener("click", () => {
+    closeModal();
+    sendPayload({ ...payload, kaj: "" }, prikazH, prikazMin);
+  });
+}
+
+function closeModal() {
+  const m = document.getElementById("kajModal");
+  if (m) m.remove();
+}
+
+// ── Pošlji na API ──
+async function sendPayload(payload, prikazH, prikazMin) {
   const area = document.getElementById("actionArea");
-  const btnStop = document.getElementById("btnStop");
-  if (btnStop) {
-    btnStop.disabled = true;
-    btnStop.innerHTML = `<span class="spinner"></span> Pošiljam…`;
-  }
+  area.innerHTML = `
+    <div class="selected-name">${payload.ime}</div>
+    <div style="display:flex;align-items:center;gap:.75rem;color:var(--text-muted)">
+      <span class="spinner" style="border-color:rgba(0,0,0,.2);border-top-color:#555"></span>
+      Pošiljam…
+    </div>
+  `;
 
   try {
     await fetch(API_URL, {
@@ -140,7 +197,8 @@ async function stopTimer() {
     localStorage.removeItem(LS_KEY);
     area.innerHTML = `
       <div class="result-card success">
-        ✅ Zabeleženo!<br>${selectedMember}: ${prikazH}h ${prikazMin}min (${ure.toFixed(2)} ur)
+        ✅ Zabeleženo!<br>${payload.ime}: ${prikazH}h ${prikazMin}min (${payload.ure.toFixed(2)} ur)
+        ${payload.kaj ? `<br><span style="font-size:.9rem;opacity:.8">${payload.kaj}</span>` : ""}
       </div>
     `;
     setTimeout(resetAll, 3000);
@@ -154,8 +212,6 @@ async function stopTimer() {
     document.getElementById("btnRetry").addEventListener("click", () => {
       renderTimerRunning();
     });
-    // restore sessionStart so retry works
-    sessionStart = new Date(sessionStart);
   }
 }
 

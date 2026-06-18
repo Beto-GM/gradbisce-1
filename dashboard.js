@@ -1,4 +1,4 @@
-const API_URL = "https://script.google.com/macros/s/AKfycbwIXW--hiEXbZ3-JnO6cYDK_8rRtF-PTl7-GHS3j-6wlXZQAL_Iwdc3WFUxm0bOG_6r/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbyy4vnG0CAdWkKw8WatFk-8fwhBtngVbl5L4yzDwTuyG54LssIebHNo2WZoRgCqOmhh/exec";
 const ČLANI = ["Franci", "Gašper", "Mitja", "David", "Filip", "Erik"];
 const BARVE = {
   Franci: "#4285F4",
