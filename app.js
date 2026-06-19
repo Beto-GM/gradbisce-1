@@ -147,7 +147,8 @@ function stopTimer() {
 // ── Modal: opis dela (po zaključku timerja) ──
 const DELA = [
   "Betonaža", "Opaženje", "Hidro izolacija", "Toplotna izolacija",
-  "Štemanje", "Priprava / razno", "Razno", "Delo z ostrešjem", "Delo z lesom"
+  "Štemanje", "Delo z ostrešjem", "Delo z lesom", "Elektrika",
+  "Vodovodne inštalacije", "Priprava / razno", "Razno"
 ];
 
 function showDeloModal(payload, prikazH, prikazMin) {
@@ -190,8 +191,8 @@ function showDeloModal(payload, prikazH, prikazMin) {
 
 // ── Modal: strošek ──
 const KATEGORIJE = [
-  "🧱 Beton / malte", "🪵 Les / opaženje", "🔧 Orodje",
-  "🏠 Izolacija", "🚗 Transport", "📦 Material / ostalo"
+  "🧱 Betonaža", "🪵 Les / opaženje", "🔧 Orodje",
+  "🏠 Izolacija", "🚗 Transport", "📦 Material razno"
 ];
 
 function showStrosekModal() {
