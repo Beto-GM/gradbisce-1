@@ -1,12 +1,16 @@
 const API_URL = "https://script.google.com/macros/s/AKfycbxzvKCqFkyeebsByJH2o_yr7jHApv923P3cpnJ9v26WbHUduOuymVh1PF35A2heMe9v/exec";
-const ČLANI = ["Franci", "Gašper", "Mitja", "David", "Filip", "Erik"];
+const ČLANI = ["Franci", "Zvonka", "Gašper", "Mitja", "David", "Filip", "Erik", "Saša", "Urška Š.", "Urška M."];
 const BARVE = {
-  Franci: "#C4581A",
-  Gašper: "#8B4513",
-  Mitja:  "#A07850",
-  David:  "#B8864E",
-  Filip:  "#C49A6C",
-  Erik:   "#D4B48A"
+  "Franci":    "#C4581A",
+  "Zvonka":    "#9B4F23",
+  "Gašper":    "#8B4513",
+  "Mitja":     "#A07850",
+  "David":     "#B8864E",
+  "Filip":     "#C49A6C",
+  "Erik":      "#D4B48A",
+  "Saša":      "#DCC1A0",
+  "Urška Š.":  "#C77B4D",
+  "Urška M.":  "#6B4226"
 };
 
 let allData = [];

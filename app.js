@@ -1,6 +1,6 @@
 const API_URL = "https://script.google.com/macros/s/AKfycbxzvKCqFkyeebsByJH2o_yr7jHApv923P3cpnJ9v26WbHUduOuymVh1PF35A2heMe9v/exec";
-const ČLANI = ["Franci", "Gašper", "Mitja", "David", "Filip", "Erik"];
-const CROWN = "Franci";
+const ČLANI = ["Franci", "Zvonka", "Gašper", "Mitja", "David", "Filip", "Erik", "Saša", "Urška Š.", "Urška M."];
+const CROWNS = ["Franci", "Zvonka"];
 const LS_KEY = "aktivna_seja";
 
 let selectedMember = null;
@@ -16,7 +16,7 @@ const grid = document.getElementById("memberGrid");
   btn.innerHTML = `
     <div class="member-avatar">${ime[0]}</div>
     <div class="member-info">
-      <span class="member-name">${ime === CROWN ? ime + " 👑" : ime}</span>
+      <span class="member-name">${CROWNS.includes(ime) ? ime + " 👑" : ime}</span>
       <span class="member-status">Prosto</span>
     </div>
   `;
@@ -171,9 +171,9 @@ function showDeloModal(payload, prikazH, prikazMin) {
 
   modal.querySelectorAll(".chip").forEach(chip => {
     chip.addEventListener("click", () => {
-      modal.querySelectorAll(".chip").forEach(c => c.classList.remove("selected"));
-      chip.classList.add("selected");
-      document.getElementById("modalInput").value = chip.dataset.dela;
+      chip.classList.toggle("selected");
+      const selected = [...modal.querySelectorAll(".chip.selected")].map(c => c.dataset.dela);
+      document.getElementById("modalInput").value = selected.join(", ");
     });
   });
 
@@ -219,9 +219,9 @@ function showStrosekModal() {
 
   modal.querySelectorAll(".chip").forEach(chip => {
     chip.addEventListener("click", () => {
-      modal.querySelectorAll(".chip").forEach(c => c.classList.remove("selected"));
-      chip.classList.add("selected");
-      document.getElementById("strosekOpis").value = chip.dataset.kat;
+      chip.classList.toggle("selected");
+      const selected = [...modal.querySelectorAll(".chip.selected")].map(c => c.dataset.kat);
+      document.getElementById("strosekOpis").value = selected.join(", ");
     });
   });
 
