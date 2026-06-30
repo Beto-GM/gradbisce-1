@@ -670,3 +670,42 @@ tr:nth-child(even) td { background: #FFF8F2; }
   .timer-display   { font-size: 3rem; }
   .chip-grid       { grid-template-columns: repeat(3, 1fr); }
 }
+/* === Nov navbar (zamenja star .navbar blok v style.css) === */
+.navbar{
+  background:#3A2E22;
+  color:#F5EFE6;
+  padding:0.85rem 1.25rem;
+  display:flex;
+  flex-direction:column;
+  gap:0.5rem;
+}
+.navbar-title{
+  color:#F5EFE6;
+  text-decoration:none;
+  font-size:19px;
+  font-weight:700;
+  line-height:1.2;
+}
+.navbar-links{
+  display:flex;
+  flex-wrap:wrap;
+  gap:0.6rem 1rem;
+}
+.navbar-links a{
+  color:#E8B873;
+  text-decoration:none;
+  font-size:14px;
+  font-weight:500;
+  white-space:nowrap;
+}
+.navbar-links a:hover{
+  text-decoration:underline;
+}
+@media (min-width:600px){
+  .navbar{
+    flex-direction:row;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .navbar-title{font-size:20px;}
+}

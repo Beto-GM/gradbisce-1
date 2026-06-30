@@ -29,9 +29,9 @@
     line-height:1.6;
   }
   header{
-    background:var(--navbar);
-    color:#F5EFE6;
-    padding:1.25rem 1.5rem;
+    background:var(--bg);
+    color:var(--text);
+    padding:1.25rem 1.5rem 0.5rem;
   }
   header h1{
     margin:0;
@@ -41,7 +41,45 @@
   header p{
     margin:4px 0 0;
     font-size:13px;
-    color:#C9BCA9;
+    color:var(--text-secondary);
+  }
+  .navbar{
+    background:#3A2E22;
+    color:#F5EFE6;
+    padding:0.85rem 1.25rem;
+    display:flex;
+    flex-direction:column;
+    gap:0.5rem;
+  }
+  .navbar-title{
+    color:#F5EFE6;
+    text-decoration:none;
+    font-size:19px;
+    font-weight:700;
+    line-height:1.2;
+  }
+  .navbar-links{
+    display:flex;
+    flex-wrap:wrap;
+    gap:0.6rem 1rem;
+  }
+  .navbar-links a{
+    color:#E8B873;
+    text-decoration:none;
+    font-size:14px;
+    font-weight:500;
+    white-space:nowrap;
+  }
+  .navbar-links a:hover{
+    text-decoration:underline;
+  }
+  @media (min-width:600px){
+    .navbar{
+      flex-direction:row;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .navbar-title{font-size:20px;}
   }
   main{
     max-width:880px;
@@ -168,9 +206,16 @@
 </head>
 <body>
 
+<nav class="navbar">
+  <a href="index.html" class="navbar-title">🏗️ Gradbišče 1</a>
+  <div class="navbar-links">
+    <a href="dashboard.html">📊 Statistike</a>
+    <a href="davcni-kalkulator.html">🧮 Davčni kalkulator</a>
+  </div>
+</nav>
+
 <header>
-  <a href="index.html" style="display:inline-block; margin-bottom:10px; color:#F5EFE6; opacity:0.85; text-decoration:none; font-size:13px;">&larr; Nazaj na Gradbišče 1</a>
-  <h1>Gradbišče 1 — Davčni kalkulator</h1>
+  <h1>Davčni kalkulator</h1>
   <p>Primerjava: fizična oseba (oče) vs. d.o.o. vs. s.p. (normiranec)</p>
 </header>
 
