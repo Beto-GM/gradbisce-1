@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gradbišče 1 — Davčni kalkulator (fizična oseba vs. d.o.o.)</title>
+<style>
+  :root{
+    --bg:#FAF7F2;
+    --card:#FFFFFF;
+    --border:#E4DDD2;
+    --text:#2C2620;
+    --text-secondary:#6B6258;
+    --text-muted:#9A9183;
+    --accent:#B5562E;
+    --accent-bg:#F6E9E1;
+    --danger:#A32D2D;
+    --warning:#854F0B;
+    --warning-bg:#FAEEDA;
+    --navbar:#3A2E22;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    line-height:1.6;
+  }
+  header{
+    background:var(--navbar);
+    color:#F5EFE6;
+    padding:1.25rem 1.5rem;
+  }
+  header h1{
+    margin:0;
+    font-size:18px;
+    font-weight:600;
+  }
+  header p{
+    margin:4px 0 0;
+    font-size:13px;
+    color:#C9BCA9;
+  }
+  main{
+    max-width:880px;
+    margin:0 auto;
+    padding:1.5rem;
+  }
+  .stats{
+    display:flex;
+    gap:8px;
+    margin-bottom:1.5rem;
+    flex-wrap:wrap;
+  }
+  .stat{
+    flex:1;
+    min-width:140px;
+    background:var(--card);
+    border:0.5px solid var(--border);
+    border-radius:var(--radius);
+    padding:0.75rem 1rem;
+  }
+  .stat .label{font-size:12px; color:var(--text-secondary);}
+  .stat .value{font-size:20px; font-weight:600; margin-top:2px;}
+
+  .slider-group{margin-bottom:1.5rem;}
+  .slider-group label{
+    display:block;
+    font-size:13px;
+    color:var(--text-secondary);
+    margin-bottom:6px;
+  }
+  input[type="range"]{
+    width:100%;
+    accent-color:var(--accent);
+  }
+  .slider-row{
+    display:flex;
+    justify-content:space-between;
+    font-size:12px;
+    color:var(--text-muted);
+    margin-top:2px;
+  }
+  .slider-row .out{
+    font-weight:600;
+    color:var(--text);
+    font-size:14px;
+  }
+
+  .cards{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:16px;
+    margin-bottom:1.5rem;
+  }
+  @media (max-width:900px){
+    .cards{grid-template-columns:1fr 1fr;}
+  }
+  @media (max-width:640px){
+    .cards{grid-template-columns:1fr;}
+  }
+  .card{
+    background:var(--card);
+    border:0.5px solid var(--border);
+    border-radius:12px;
+    padding:1.25rem;
+  }
+  .card-title{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom:12px;
+    font-size:15px;
+    font-weight:600;
+  }
+  table{width:100%; font-size:13px; border-collapse:collapse;}
+  table td{padding:5px 0;}
+  table td.lbl{color:var(--text-secondary);}
+  table td.val{text-align:right;}
+  tr.subtotal td{border-top:0.5px solid var(--border); padding-top:7px; font-weight:600;}
+  tr.taxrow td.val{color:var(--danger); font-weight:600;}
+  tr.net td{border-top:0.5px solid var(--border); padding-top:8px; font-weight:700; font-size:16px;}
+
+  .risk{
+    margin-top:10px;
+    font-size:12px;
+    color:var(--warning);
+    background:var(--warning-bg);
+    padding:8px 10px;
+    border-radius:8px;
+    display:flex;
+    gap:6px;
+  }
+  .risk .icon{flex-shrink:0; margin-top:1px;}
+
+  .diff-box{
+    background:var(--accent-bg);
+    border-radius:var(--radius);
+    padding:1rem 1.25rem;
+    margin-bottom:1.5rem;
+    font-size:13px;
+  }
+  .diff-box strong{color:var(--accent);}
+
+  .caveats{
+    border-top:0.5px solid var(--border);
+    padding-top:1rem;
+    font-size:13px;
+    color:var(--text-secondary);
+  }
+  .caveats .title{
+    font-weight:600;
+    color:var(--text);
+    margin-bottom:6px;
+  }
+  .caveats ul{margin:0; padding-left:18px;}
+  .caveats li{margin-bottom:4px;}
+
+  footer{
+    text-align:center;
+    font-size:11px;
+    color:var(--text-muted);
+    padding:1.5rem;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Gradbišče 1 — Davčni kalkulator</h1>
+  <p>Primerjava: fizična oseba (oče) vs. d.o.o. vs. s.p. (normiranec)</p>
+</header>
+
+<main>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="label">Stopnja DDPO (2024–2028)</div>
+      <div class="value">22%</div>
+    </div>
+    <div class="stat">
+      <div class="label">Davek na dividende</div>
+      <div class="value">25%</div>
+    </div>
+    <div class="stat">
+      <div class="label">Kap. dobiček FO, 3–10 let imetništva</div>
+      <div class="value">20%</div>
+    </div>
+  </div>
+
+  <div class="slider-group">
+    <label for="sale">Ocenjena prodajna vrednost hiše (EUR)</label>
+    <input type="range" id="sale" min="100000" max="400000" step="5000" value="220000">
+    <div class="slider-row"><span>100.000</span><span class="out" id="sale-out">220.000 €</span><span>400.000</span></div>
+  </div>
+
+  <div class="slider-group">
+    <label for="land">Ocenjena vrednost zemljišča na dan dedovanja (nabavna vrednost, EUR)</label>
+    <input type="range" id="land" min="0" max="150000" step="2500" value="60000">
+    <div class="slider-row"><span>0</span><span class="out" id="land-out">60.000 €</span><span>150.000</span></div>
+  </div>
+
+  <div class="slider-group">
+    <label for="build">Stroški gradnje — material + dela, z računi (EUR)</label>
+    <input type="range" id="build" min="20000" max="200000" step="2500" value="90000">
+    <div class="slider-row"><span>20.000</span><span class="out" id="build-out">90.000 €</span><span>200.000</span></div>
+  </div>
+
+  <div class="slider-group">
+    <label for="months">Trajanje s.p. — koliko mesecev bo aktiven do prodaje (samo za scenarij s.p.)</label>
+    <input type="range" id="months" min="6" max="24" step="1" value="13">
+    <div class="slider-row"><span>6</span><span class="out" id="months-out">13 mesecev</span><span>24</span></div>
+  </div>
+
+  <div class="cards">
+
+    <div class="card">
+      <div class="card-title">👤 Scenarij 1: fizična oseba (oče)</div>
+      <table>
+        <tr><td class="lbl">Prodajna vrednost</td><td class="val" id="s1-sale">-</td></tr>
+        <tr><td class="lbl">− nabavna vrednost (dedovanje)</td><td class="val" id="s1-land">-</td></tr>
+        <tr><td class="lbl">− vlaganja v gradnjo (z računi)</td><td class="val" id="s1-build">-</td></tr>
+        <tr><td class="lbl">− normirani stroški (1% + 1%)</td><td class="val" id="s1-norm">-</td></tr>
+        <tr class="subtotal"><td>Davčna osnova</td><td class="val" id="s1-base">-</td></tr>
+        <tr><td class="lbl">Stopnja dohodnine (3–10 let imetništva)</td><td class="val">20%</td></tr>
+        <tr class="taxrow subtotal"><td>Davek na kapitalski dobiček</td><td class="val" id="s1-tax">-</td></tr>
+        <tr class="net"><td>Neto v žep</td><td class="val" id="s1-net">-</td></tr>
+      </table>
+      <div class="risk">
+        <span class="icon">⚠</span>
+        <span>Tveganje: FURS lahko aktivnost prekvalificira v opravljanje dejavnosti, če oceni, da gre za sistematično/pridobitno ravnanje (ni zakonsko definirano s številom transakcij — presoja od primera do primera).</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🏢 Scenarij 2: d.o.o.</div>
+      <table>
+        <tr><td class="lbl">Prodajna vrednost (prihodek d.o.o.)</td><td class="val" id="s2-sale">-</td></tr>
+        <tr><td class="lbl">− vložek zemljišča (po vrednosti vložka)</td><td class="val" id="s2-land">-</td></tr>
+        <tr><td class="lbl">− stroški gradnje (odhodek)</td><td class="val" id="s2-build">-</td></tr>
+        <tr class="subtotal"><td>Dobiček pred davkom</td><td class="val" id="s2-profit">-</td></tr>
+        <tr class="taxrow"><td class="lbl">DDPO (22%)</td><td class="val" id="s2-ddpo">-</td></tr>
+        <tr class="subtotal"><td>Dobiček po DDPO</td><td class="val" id="s2-after-ddpo">-</td></tr>
+        <tr class="taxrow"><td class="lbl">Davek na dividende (25%, če izplačano)</td><td class="val" id="s2-div">-</td></tr>
+        <tr class="net"><td>Neto v žep (po izplačilu)</td><td class="val" id="s2-net">-</td></tr>
+      </table>
+      <div class="risk">
+        <span class="icon">⚠</span>
+        <span>Tveganje: prenos podedovane parcele na d.o.o. je lahko sam po sebi obdavčljiva odsvojitev pri očetu (dohodnina od kap. dobička na vložek). Ni vključeno zgoraj — odprto pravno vprašanje.</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🧰 Scenarij 3: s.p. (normiranec)</div>
+      <table>
+        <tr><td class="lbl">Prodajna vrednost (prihodek s.p.)</td><td class="val" id="s3-sale">-</td></tr>
+        <tr><td class="lbl">Normirani odhodki (pavšal, ne dejanski stroški)</td><td class="val" id="s3-norm">-</td></tr>
+        <tr class="subtotal"><td>Davčna osnova (dohodnina)</td><td class="val" id="s3-base">-</td></tr>
+        <tr class="taxrow"><td class="lbl">Dohodnina (20% / 35% nad pragom)</td><td class="val" id="s3-tax">-</td></tr>
+        <tr class="taxrow"><td class="lbl">Prispevki za socialno varnost (ocena)</td><td class="val" id="s3-contrib">-</td></tr>
+        <tr class="net"><td>Neto v žep</td><td class="val" id="s3-net">-</td></tr>
+      </table>
+      <div class="risk">
+        <span class="icon">⚠</span>
+        <span>Pomembno: normiranec NE more odbiti dejanskih stroškov zemljišča in gradnje — le pavšalni normirani odhodek glede na prihodek. Pri visokih dejanskih stroških gradnje je to lahko zelo neugodno. Prag za normiranca: 60.000 € (80% odhodkov), nato 120.000 € (0% odhodkov, progresija 20%/35%). Velja nova zakonodaja od 1.1.2026 (ZPZR).</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="diff-box">
+    <strong>Razlika neto izkupička:</strong> <span id="diff-text">-</span>
+  </div>
+
+  <div class="caveats">
+    <div class="title">Kaj ta kalkulator NE upošteva (preveriti pri davčnem svetovalcu):</div>
+    <ul>
+      <li>Davčne posledice prenosa zemljišča na d.o.o. ali vložka v s.p. (lahko sproži dohodnino pri očetu že ob vložku)</li>
+      <li>Strošek ustanovitve in vodenja d.o.o. (računovodstvo, prispevki, AJPES)</li>
+      <li>DDV na gradbene storitve (9,5% ali 22%, odvisno od statusa investitorja in vrste objekta)</li>
+      <li>Možnost, da FURS prodajo več nepremičnin s strani fizične osebe opredeli kot dejavnost (s.p.)</li>
+      <li>Strošek odvetnika/notarja za pogodbe in prenose</li>
+      <li>S.p.: ali bi 2-letno povprečje prihodkov sploh dovolilo status normiranca pri tako visokem enkratnem prihodku (prag 120.000 €/leto za polni s.p. od 2026)</li>
+      <li>S.p.: prispevki v kalkulatorju so groba ocena minimalne osnove (651 €/mesec, 2026) — dejanska osnova se lahko poveča glede na dobiček, poleg tega obstaja možna delna oprostitev PIZ v prvih 12-24 mesecih za novoregistrirane s.p., ki ni vključena v izračun</li>
+    </ul>
+  </div>
+
+</main>
+
+<footer>
+  Gradbišče 1 — interni kalkulator. Ni davčno/pravno svetovanje. Zneski in stopnje preveriti pri davčnem svetovalcu (stanje zakonodaje: 2026).
+</footer>
+
+<script>
+function fmt(n){
+  return Math.round(n).toLocaleString('sl-SI') + ' €';
+}
+
+function update(){
+  const sale = parseFloat(document.getElementById('sale').value);
+  const land = parseFloat(document.getElementById('land').value);
+  const build = parseFloat(document.getElementById('build').value);
+  const months = parseFloat(document.getElementById('months').value);
+
+  document.getElementById('sale-out').textContent = fmt(sale);
+  document.getElementById('land-out').textContent = fmt(land);
+  document.getElementById('build-out').textContent = fmt(build);
+  document.getElementById('months-out').textContent = months + ' mesecev';
+
+  // Scenarij 1: fizicna oseba
+  const norm = sale * 0.01 + land * 0.01;
+  const base1 = Math.max(0, sale - land - build - norm);
+  const tax1 = base1 * 0.20;
+  const net1 = sale - tax1;
+
+  document.getElementById('s1-sale').textContent = fmt(sale);
+  document.getElementById('s1-land').textContent = '−' + fmt(land);
+  document.getElementById('s1-build').textContent = '−' + fmt(build);
+  document.getElementById('s1-norm').textContent = '−' + fmt(norm);
+  document.getElementById('s1-base').textContent = fmt(base1);
+  document.getElementById('s1-tax').textContent = '−' + fmt(tax1);
+  document.getElementById('s1-net').textContent = fmt(net1);
+
+  // Scenarij 2: d.o.o.
+  const profit2 = Math.max(0, sale - land - build);
+  const ddpo = profit2 * 0.22;
+  const afterDdpo = profit2 - ddpo;
+  const div = afterDdpo * 0.25;
+  const netPocket2 = afterDdpo - div;
+
+  document.getElementById('s2-sale').textContent = fmt(sale);
+  document.getElementById('s2-land').textContent = '−' + fmt(land);
+  document.getElementById('s2-build').textContent = '−' + fmt(build);
+  document.getElementById('s2-profit').textContent = fmt(profit2);
+  document.getElementById('s2-ddpo').textContent = '−' + fmt(ddpo);
+  document.getElementById('s2-after-ddpo').textContent = fmt(afterDdpo);
+  document.getElementById('s2-div').textContent = '−' + fmt(div);
+  document.getElementById('s2-net').textContent = fmt(netPocket2);
+
+  // Scenarij 3: s.p. normiranec (polni, pravila od 1.1.2026 / ZPZR)
+  // Normirani odhodki: 80% do 60.000 EUR prihodka, 0% nad 60.000 EUR
+  let normOdh3;
+  if (sale <= 60000) {
+    normOdh3 = sale * 0.80;
+  } else {
+    normOdh3 = 60000 * 0.80; // = 48000, nad tem 0%
+  }
+  const base3 = sale - normOdh3;
+  // Davek: 20% do davčne osnove 72.000 EUR, 35% nad tem
+  let tax3;
+  if (base3 <= 72000) {
+    tax3 = base3 * 0.20;
+  } else {
+    tax3 = 72000 * 0.20 + (base3 - 72000) * 0.35;
+  }
+  // Prispevki: ocena ~651 EUR/mesec (minimalna osnova, 2026), brez upoštevanja morebitne PIZ olajšave za nove s.p.
+  const contribMonthly = 651;
+  const contrib3 = contribMonthly * months;
+  const net3 = sale - tax3 - contrib3;
+
+  document.getElementById('s3-sale').textContent = fmt(sale);
+  document.getElementById('s3-norm').textContent = '−' + fmt(normOdh3);
+  document.getElementById('s3-base').textContent = fmt(base3);
+  document.getElementById('s3-tax').textContent = '−' + fmt(tax3);
+  document.getElementById('s3-contrib').textContent = '−' + fmt(contrib3);
+  document.getElementById('s3-net').textContent = fmt(net3);
+
+  const diff = net1 - netPocket2;
+  const diffText = diff >= 0
+    ? `Scenarij 1 (fizična oseba) prinese ${fmt(Math.abs(diff))} več neto kot scenarij 2 (d.o.o.), brez stroškov ustanovitve/vodenja d.o.o. in brez tveganja obdavčitve ob vložku zemljišča. Scenarij 3 (s.p.) je pri teh vnosih praviloma najslabši, ker ne dovoljuje odbitka dejanskih stroškov zemljišča in gradnje — primerjajte neto zneske vseh treh kartic zgoraj.`
+    : `Scenarij 2 (d.o.o.) prinese ${fmt(Math.abs(diff))} več neto kot scenarij 1 pri teh vnosih — vendar pred upoštevanjem stroškov d.o.o. in tveganja obdavčitve ob vložku zemljišča. Scenarij 3 (s.p.) primerjajte ločeno v tretji kartici zgoraj.`;
+  document.getElementById('diff-text').textContent = diffText;
+}
+
+['sale','land','build','months'].forEach(id => document.getElementById(id).addEventListener('input', update));
+update();
+</script>
+
+</body>
+</html>
