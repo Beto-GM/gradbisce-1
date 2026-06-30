@@ -33,29 +33,44 @@ body {
   z-index: 100;
   background: var(--nav-bg);
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 1rem;
-  height: 54px;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.7rem 1rem;
   box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
-.navbar h1 {
+.navbar-title {
+  color: var(--nav-text);
+  text-decoration: none;
   font-size: 1.05rem;
   font-weight: 700;
-  color: var(--nav-text);
   letter-spacing: 0.01em;
+  line-height: 1.2;
 }
-.navbar a {
+.navbar-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.6rem;
+}
+.navbar-links a {
   color: var(--nav-accent);
   text-decoration: none;
-  font-size: 0.92rem;
+  font-size: 0.88rem;
   font-weight: 600;
-  padding: 7px 12px;
+  padding: 5px 10px;
   border-radius: 8px;
   transition: background 0.2s;
   white-space: nowrap;
 }
-.navbar a:hover { background: rgba(245,185,122,0.15); }
+.navbar-links a:hover { background: rgba(245,185,122,0.15); }
+
+@media (min-width: 600px) {
+  .navbar {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .navbar-title { font-size: 1.15rem; }
+}
 
 /* ── Layout ── */
 .container { max-width: 720px; margin: 0 auto; padding: 0.75rem 1rem 2rem; }
@@ -590,7 +605,7 @@ tr:nth-child(even) td { background: #FFF8F2; }
   border-bottom: 1px solid var(--border);
   display: flex;
   position: sticky;
-  top: 54px;
+  top: 0;
   z-index: 90;
 }
 .tab-btn {
@@ -669,43 +684,4 @@ tr:nth-child(even) td { background: #FFF8F2; }
   .stats-grid      { grid-template-columns: repeat(4, 1fr); }
   .timer-display   { font-size: 3rem; }
   .chip-grid       { grid-template-columns: repeat(3, 1fr); }
-}
-/* === Nov navbar (zamenja star .navbar blok v style.css) === */
-.navbar{
-  background:#3A2E22;
-  color:#F5EFE6;
-  padding:0.85rem 1.25rem;
-  display:flex;
-  flex-direction:column;
-  gap:0.5rem;
-}
-.navbar-title{
-  color:#F5EFE6;
-  text-decoration:none;
-  font-size:19px;
-  font-weight:700;
-  line-height:1.2;
-}
-.navbar-links{
-  display:flex;
-  flex-wrap:wrap;
-  gap:0.6rem 1rem;
-}
-.navbar-links a{
-  color:#E8B873;
-  text-decoration:none;
-  font-size:14px;
-  font-weight:500;
-  white-space:nowrap;
-}
-.navbar-links a:hover{
-  text-decoration:underline;
-}
-@media (min-width:600px){
-  .navbar{
-    flex-direction:row;
-    align-items:center;
-    justify-content:space-between;
-  }
-  .navbar-title{font-size:20px;}
 }
