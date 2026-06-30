@@ -3,6 +3,24 @@ const ČLANI = ["Franci", "Zvonka", "Gašper", "Mitja", "David", "Filip", "Erik"
 const CROWNS = ["Franci", "Zvonka"];
 const LS_KEY = "aktivna_seja";
 
+// ── SVG icon constants (Lucide-style, stroke-based, currentColor) ──
+const ICON_PLAY    = `<svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
+const ICON_STOP    = `<svg class="icon" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/></svg>`;
+const ICON_WALLET  = `<svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg>`;
+const ICON_HARDHAT = `<svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 18a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v2z"/><path d="M10 10V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5"/><path d="M4 15v-3a8 8 0 0 1 16 0v3"/></svg>`;
+const ICON_CHECK   = `<svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`;
+const ICON_X       = `<svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`;
+
+// SVG icons for kategorije chips (14px, parallel to KATEGORIJE array)
+const KAT_SVG = [
+  `<svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>`,
+  `<svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>`,
+  `<svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>`,
+  `<svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
+  `<svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>`,
+  `<svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16.5 9.4 7.55 4.24"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>`,
+];
+
 let selectedMember = null;
 let timerInterval = null;
 let sessionStart = null;
@@ -62,8 +80,8 @@ function renderSelected() {
   area.innerHTML = `
     <span class="session-label">Izberi akcijo — ${selectedMember}</span>
     <div class="action-buttons">
-      <button class="btn btn-filled btn-large" id="btnStart">▶ Začni beleženje ur</button>
-      <button class="btn btn-outlined btn-large" id="btnStrosek">💰 Dodaj strošek</button>
+      <button class="btn btn-filled btn-large" id="btnStart">${ICON_PLAY} Začni beleženje ur</button>
+      <button class="btn btn-outlined btn-large" id="btnStrosek">${ICON_WALLET} Dodaj strošek</button>
     </div>
     <button class="btn btn-text" id="btnCancel">Prekliči izbiro</button>
   `;
@@ -100,7 +118,7 @@ function renderTimerRunning() {
     <div class="recording-indicator">
       <span class="pulse-dot"></span> SNEMAM
     </div>
-    <button class="btn btn-danger btn-large" id="btnStop">⏹ ZAKLJUČI DELO</button>
+    <button class="btn btn-danger btn-large" id="btnStop">${ICON_STOP} ZAKLJUČI DELO</button>
     <p class="warning-text">⚠️ Ne zapri okna med delom!</p>
   `;
 
@@ -157,13 +175,13 @@ function showDeloModal(payload, prikazH, prikazMin) {
   modal.className = "modal-overlay";
   modal.innerHTML = `
     <div class="modal-card">
-      <h2 class="modal-title">Kaj si delal? 👷</h2>
+      <h2 class="modal-title">Kaj si delal? ${ICON_HARDHAT}</h2>
       <p class="modal-subtitle">Izberi ali napiši kratek opis dela</p>
       <div class="chip-grid">
         ${DELA.map(d => `<button class="chip" data-dela="${d}">${d}</button>`).join("")}
       </div>
       <input class="modal-input" id="modalInput" type="text" placeholder="Ali napiši svoje…" maxlength="60">
-      <button class="btn btn-primary btn-large" id="btnConfirm">✅ Potrdi in shrani</button>
+      <button class="btn btn-primary btn-large" id="btnConfirm">${ICON_CHECK} Potrdi in shrani</button>
       <button class="btn btn-secondary modal-skip" id="btnSkip">Preskoči</button>
     </div>
   `;
@@ -201,17 +219,17 @@ function showStrosekModal() {
   modal.className = "modal-overlay";
   modal.innerHTML = `
     <div class="modal-card">
-      <h2 class="modal-title">💰 Dodaj strošek</h2>
+      <h2 class="modal-title">${ICON_WALLET} Dodaj strošek</h2>
       <p class="modal-subtitle">Izberi kategorijo in vnesi znesek</p>
       <div class="chip-grid">
-        ${KATEGORIJE.map(k => `<button class="chip" data-kat="${k}">${k}</button>`).join("")}
+        ${KATEGORIJE.map((k, i) => `<button class="chip" data-kat="${k}">${KAT_SVG[i]} ${k.split(' ').slice(1).join(' ')}</button>`).join("")}
       </div>
       <input class="modal-input" id="strosekOpis" type="text" placeholder="Natančnejši opis (neobvezno)" maxlength="80">
       <div class="znesek-row">
         <label class="modal-label" for="strosekZnesek">Znesek (€)</label>
         <input class="modal-input znesek-input" id="strosekZnesek" type="number" placeholder="0.00" min="0" step="0.01">
       </div>
-      <button class="btn btn-filled btn-large" id="btnStrosekSave" disabled>✅ Shrani strošek</button>
+      <button class="btn btn-filled btn-large" id="btnStrosekSave" disabled>${ICON_CHECK} Shrani strošek</button>
       <button class="btn btn-secondary modal-skip" id="btnStrosekCancel">Prekliči</button>
     </div>
   `;
@@ -270,7 +288,7 @@ async function sendUrePayload(payload, prikazH, prikazMin) {
     localStorage.removeItem(LS_KEY);
     area.innerHTML = `
       <div class="result-card success">
-        ✅ Zabeleženo!<br>${payload.ime}: ${prikazH}h ${prikazMin}min (${payload.ure.toFixed(2)} ur)
+        ${ICON_CHECK} Zabeleženo!<br>${payload.ime}: ${prikazH}h ${prikazMin}min (${payload.ure.toFixed(2)} ur)
         ${payload.kaj ? `<br><span style="font-size:.9rem;opacity:.8">${payload.kaj}</span>` : ""}
       </div>
     `;
@@ -278,7 +296,7 @@ async function sendUrePayload(payload, prikazH, prikazMin) {
   } catch (err) {
     area.innerHTML = `
       <div class="result-card error">
-        ❌ Napaka pri pošiljanju:<br>${err.message}
+        ${ICON_X} Napaka pri pošiljanju:<br>${err.message}
       </div>
       <button class="btn btn-danger" id="btnRetry">Poskusi znova</button>
     `;
@@ -315,14 +333,14 @@ async function sendStrosekPayload(predmet, vrednost) {
     const prikazPredmet = predmet || "—";
     area.innerHTML = `
       <div class="result-card success">
-        ✅ Strošek shranjen!<br>${selectedMember}: ${prikazPredmet} — ${vrednost.toFixed(2)} €
+        ${ICON_CHECK} Strošek shranjen!<br>${selectedMember}: ${prikazPredmet} — ${vrednost.toFixed(2)} €
       </div>
     `;
     setTimeout(resetAll, 3000);
   } catch (err) {
     area.innerHTML = `
       <div class="result-card error">
-        ❌ Napaka pri pošiljanju:<br>${err.message}
+        ${ICON_X} Napaka pri pošiljanju:<br>${err.message}
       </div>
       <button class="btn btn-danger" id="btnRetryS">Poskusi znova</button>
     `;
