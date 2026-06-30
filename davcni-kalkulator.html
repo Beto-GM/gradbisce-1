@@ -3,214 +3,242 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gradbišče 1 — Davčni kalkulator (fizična oseba vs. d.o.o.)</title>
+<title>Gradbišče 1 — Davčni kalkulator</title>
+<link rel="stylesheet" href="style.css">
 <style>
-  :root{
-    --bg:#FAF7F2;
-    --card:#FFFFFF;
-    --border:#E4DDD2;
-    --text:#2C2620;
-    --text-secondary:#6B6258;
-    --text-muted:#9A9183;
-    --accent:#B5562E;
-    --accent-bg:#F6E9E1;
-    --danger:#A32D2D;
-    --warning:#854F0B;
-    --warning-bg:#FAEEDA;
-    --navbar:#3A2E22;
-    --radius:10px;
-  }
-  *{box-sizing:border-box;}
-  body{
-    margin:0;
-    font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background:var(--bg);
-    color:var(--text);
-    line-height:1.6;
-  }
-  header{
-    background:var(--bg);
-    color:var(--text);
-    padding:1.25rem 1.5rem 0.5rem;
-  }
-  header h1{
-    margin:0;
-    font-size:18px;
-    font-weight:600;
-  }
-  header p{
-    margin:4px 0 0;
-    font-size:13px;
-    color:var(--text-secondary);
-  }
-  .navbar{
-    background:#3A2E22;
-    color:#F5EFE6;
-    padding:0.85rem 1.25rem;
-    display:flex;
-    flex-direction:column;
-    gap:0.5rem;
-  }
-  .navbar-title{
-    color:#F5EFE6;
-    text-decoration:none;
-    font-size:19px;
-    font-weight:700;
-    line-height:1.2;
-  }
-  .navbar-links{
-    display:flex;
-    flex-wrap:wrap;
-    gap:0.6rem 1rem;
-  }
-  .navbar-links a{
-    color:#E8B873;
-    text-decoration:none;
-    font-size:14px;
-    font-weight:500;
-    white-space:nowrap;
-  }
-  .navbar-links a:hover{
-    text-decoration:underline;
-  }
-  @media (min-width:600px){
-    .navbar{
-      flex-direction:row;
-      align-items:center;
-      justify-content:space-between;
-    }
-    .navbar-title{font-size:20px;}
-  }
-  main{
-    max-width:880px;
-    margin:0 auto;
-    padding:1.5rem;
-  }
-  .stats{
-    display:flex;
-    gap:8px;
-    margin-bottom:1.5rem;
-    flex-wrap:wrap;
-  }
-  .stat{
-    flex:1;
-    min-width:140px;
-    background:var(--card);
-    border:0.5px solid var(--border);
-    border-radius:var(--radius);
-    padding:0.75rem 1rem;
-  }
-  .stat .label{font-size:12px; color:var(--text-secondary);}
-  .stat .value{font-size:20px; font-weight:600; margin-top:2px;}
+/* ── Page-specific styles (navbar + base from style.css) ── */
 
-  .slider-group{margin-bottom:1.5rem;}
-  .slider-group label{
-    display:block;
-    font-size:13px;
-    color:var(--text-secondary);
-    margin-bottom:6px;
-  }
-  input[type="range"]{
-    width:100%;
-    accent-color:var(--accent);
-  }
-  .slider-row{
-    display:flex;
-    justify-content:space-between;
-    font-size:12px;
-    color:var(--text-muted);
-    margin-top:2px;
-  }
-  .slider-row .out{
-    font-weight:600;
-    color:var(--text);
-    font-size:14px;
-  }
+main {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 0 16px 48px;
+}
 
-  .cards{
-    display:grid;
-    grid-template-columns:1fr 1fr 1fr;
-    gap:16px;
-    margin-bottom:1.5rem;
-  }
-  @media (max-width:900px){
-    .cards{grid-template-columns:1fr 1fr;}
-  }
-  @media (max-width:640px){
-    .cards{grid-template-columns:1fr;}
-  }
-  .card{
-    background:var(--card);
-    border:0.5px solid var(--border);
-    border-radius:12px;
-    padding:1.25rem;
-  }
-  .card-title{
-    display:flex;
-    align-items:center;
-    gap:8px;
-    margin-bottom:12px;
-    font-size:15px;
-    font-weight:600;
-  }
-  table{width:100%; font-size:13px; border-collapse:collapse;}
-  table td{padding:5px 0;}
-  table td.lbl{color:var(--text-secondary);}
-  table td.val{text-align:right;}
-  tr.subtotal td{border-top:0.5px solid var(--border); padding-top:7px; font-weight:600;}
-  tr.taxrow td.val{color:var(--danger); font-weight:600;}
-  tr.net td{border-top:0.5px solid var(--border); padding-top:8px; font-weight:700; font-size:16px;}
+/* Page header */
+header {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 20px 16px 0;
+}
+header h1 {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+header p {
+  margin: 6px 0 0;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
 
-  .risk{
-    margin-top:10px;
-    font-size:12px;
-    color:var(--warning);
-    background:var(--warning-bg);
-    padding:8px 10px;
-    border-radius:8px;
-    display:flex;
-    gap:6px;
-  }
-  .risk .icon{flex-shrink:0; margin-top:1px;}
+/* Stat row (fixed-rate reference) */
+.stats {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.stat {
+  flex: 1;
+  min-width: 140px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 14px 16px;
+  animation: fadeInCard 0.25s ease both;
+}
+.stat:nth-child(1) { animation-delay: 0ms; }
+.stat:nth-child(2) { animation-delay: 60ms; }
+.stat:nth-child(3) { animation-delay: 120ms; }
+.stat .label {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 600;
+  line-height: 1.3;
+}
+.stat .value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-top: 4px;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
 
-  .diff-box{
-    background:var(--accent-bg);
-    border-radius:var(--radius);
-    padding:1rem 1.25rem;
-    margin-bottom:1.5rem;
-    font-size:13px;
-  }
-  .diff-box strong{color:var(--accent);}
+/* Sliders */
+.slider-group {
+  margin-bottom: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px;
+}
+.slider-group label {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+input[type="range"] {
+  width: 100%;
+  accent-color: var(--accent);
+  cursor: pointer;
+  height: 20px;
+  min-height: 20px;
+}
+.slider-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 11px;
+  color: var(--text-hint);
+  margin-top: 6px;
+}
+.slider-row .out {
+  font-weight: 700;
+  color: var(--accent);
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
 
-  .caveats{
-    border-top:0.5px solid var(--border);
-    padding-top:1rem;
-    font-size:13px;
-    color:var(--text-secondary);
-  }
-  .caveats .title{
-    font-weight:600;
-    color:var(--text);
-    margin-bottom:6px;
-  }
-  .caveats ul{margin:0; padding-left:18px;}
-  .caveats li{margin-bottom:4px;}
+/* Scenario cards grid */
+.cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+  margin-top: 20px;
+  margin-bottom: 24px;
+}
+@media (max-width: 900px) { .cards { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 640px) { .cards { grid-template-columns: 1fr; } }
 
-  footer{
-    text-align:center;
-    font-size:11px;
-    color:var(--text-muted);
-    padding:1.5rem;
-  }
+.cards .card {
+  margin-bottom: 0;
+  padding: 20px;
+  animation: fadeInCard 0.3s ease both;
+}
+.cards .card:nth-child(1) { animation-delay: 0ms; }
+.cards .card:nth-child(2) { animation-delay: 80ms; }
+.cards .card:nth-child(3) { animation-delay: 160ms; }
+
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.3;
+}
+
+/* Scenario table — overrides shared td styles */
+.cards table {
+  width: 100%;
+  font-size: 0.8rem;
+  border-collapse: collapse;
+}
+.cards table td {
+  padding: 6px 0;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  border-bottom: none;
+  animation: none;
+  white-space: normal;
+  background: transparent;
+}
+.cards table td.lbl { color: var(--text-muted); font-weight: 400; }
+.cards table td.val { text-align: right; font-weight: 500; }
+tr.subtotal td { border-top: 1px solid var(--border); padding-top: 8px; font-weight: 700; }
+tr.taxrow td.val { color: var(--accent); font-weight: 700; }
+tr.net td {
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+  font-weight: 800;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+/* Risk warning */
+.risk {
+  margin-top: 14px;
+  font-size: 0.73rem;
+  color: #7A4A08;
+  background: #FDF0D8;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #E8C98A;
+  display: flex;
+  gap: 8px;
+  line-height: 1.5;
+}
+.risk .icon { flex-shrink: 0; margin-top: 1px; color: #9A5C10; }
+
+/* Diff summary */
+.diff-box {
+  background: var(--accent-light);
+  border: 1px solid #F0C0A0;
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  margin-bottom: 24px;
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+.diff-box strong { color: var(--accent); }
+
+/* Caveats */
+.caveats {
+  border-top: 1px solid var(--border);
+  padding-top: 16px;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+.caveats .title {
+  font-weight: 700;
+  color: var(--text-primary);
+  font-size: 0.88rem;
+  margin-bottom: 10px;
+}
+.caveats ul { margin: 0; padding-left: 20px; }
+.caveats li { margin-bottom: 6px; line-height: 1.5; }
+
+/* Footer */
+footer {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-hint);
+  padding: 24px 16px;
+  max-width: 880px;
+  margin: 0 auto;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .stat, .cards .card { animation: none !important; transition: none !important; }
+}
 </style>
 </head>
 <body>
 
 <nav class="navbar">
-  <a href="index.html" class="navbar-title">🏗️ Gradbišče 1</a>
+  <a href="index.html" class="navbar-title"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 18a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v2z"/><path d="M10 10V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5"/><path d="M4 15v-3a8 8 0 0 1 16 0v3"/></svg> Gradbišče 1</a>
   <div class="navbar-links">
-    <a href="dashboard.html">📊 Statistike</a>
-    <a href="davcni-kalkulator.html">🧮 Davčni kalkulator</a>
+    <a href="dashboard.html"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg> Statistike</a>
+    <a href="davcni-kalkulator.html"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><rect x="8" y="6" width="8" height="4" rx="1"/><circle cx="8" cy="14" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="14" r="1" fill="currentColor" stroke="none"/><circle cx="16" cy="14" r="1" fill="currentColor" stroke="none"/><circle cx="8" cy="18" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="18" r="1" fill="currentColor" stroke="none"/><circle cx="16" cy="18" r="1" fill="currentColor" stroke="none"/></svg> Davčni kalkulator</a>
   </div>
 </nav>
 
@@ -263,7 +291,7 @@
   <div class="cards">
 
     <div class="card">
-      <div class="card-title">👤 Scenarij 1: fizična oseba (oče)</div>
+      <div class="card-title"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Scenarij 1: fizična oseba (oče)</div>
       <table>
         <tr><td class="lbl">Prodajna vrednost</td><td class="val" id="s1-sale">-</td></tr>
         <tr><td class="lbl">− nabavna vrednost (dedovanje)</td><td class="val" id="s1-land">-</td></tr>
@@ -275,13 +303,13 @@
         <tr class="net"><td>Neto v žep</td><td class="val" id="s1-net">-</td></tr>
       </table>
       <div class="risk">
-        <span class="icon">⚠</span>
+        <span class="icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
         <span>Tveganje: FURS lahko aktivnost prekvalificira v opravljanje dejavnosti, če oceni, da gre za sistematično/pridobitno ravnanje (ni zakonsko definirano s številom transakcij — presoja od primera do primera).</span>
       </div>
     </div>
 
     <div class="card">
-      <div class="card-title">🏢 Scenarij 2: d.o.o.</div>
+      <div class="card-title"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M9 3v18"/><path d="M3 9h6M3 15h6"/><path d="M15 9h3M15 15h3M15 3v3M15 18v3"/></svg> Scenarij 2: d.o.o.</div>
       <table>
         <tr><td class="lbl">Prodajna vrednost (prihodek d.o.o.)</td><td class="val" id="s2-sale">-</td></tr>
         <tr><td class="lbl">− vložek zemljišča (po vrednosti vložka)</td><td class="val" id="s2-land">-</td></tr>
@@ -293,13 +321,13 @@
         <tr class="net"><td>Neto v žep (po izplačilu)</td><td class="val" id="s2-net">-</td></tr>
       </table>
       <div class="risk">
-        <span class="icon">⚠</span>
+        <span class="icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
         <span>Tveganje: prenos podedovane parcele na d.o.o. je lahko sam po sebi obdavčljiva odsvojitev pri očetu (dohodnina od kap. dobička na vložek). Ni vključeno zgoraj — odprto pravno vprašanje.</span>
       </div>
     </div>
 
     <div class="card">
-      <div class="card-title">🧰 Scenarij 3: s.p. (normiranec)</div>
+      <div class="card-title"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg> Scenarij 3: s.p. (normiranec)</div>
       <table>
         <tr><td class="lbl">Prodajna vrednost (prihodek s.p.)</td><td class="val" id="s3-sale">-</td></tr>
         <tr><td class="lbl">Normirani odhodki (pavšal, ne dejanski stroški)</td><td class="val" id="s3-norm">-</td></tr>
@@ -309,7 +337,7 @@
         <tr class="net"><td>Neto v žep</td><td class="val" id="s3-net">-</td></tr>
       </table>
       <div class="risk">
-        <span class="icon">⚠</span>
+        <span class="icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
         <span>Pomembno: normiranec NE more odbiti dejanskih stroškov zemljišča in gradnje — le pavšalni normirani odhodek glede na prihodek. Pri visokih dejanskih stroških gradnje je to lahko zelo neugodno. Prag za normiranca: 60.000 € (80% odhodkov), nato 120.000 € (0% odhodkov, progresija 20%/35%). Velja nova zakonodaja od 1.1.2026 (ZPZR).</span>
       </div>
     </div>
