@@ -570,7 +570,7 @@ function showFotoModal() {
           body:    JSON.stringify({
             type:     "foto",
             tip:      selectedTip,
-            base64:   base64data,
+            base64:   base64data.split(",")[1],
             mimeType: "image/jpeg",
             datum:    formatDate(new Date()),
             opis,
