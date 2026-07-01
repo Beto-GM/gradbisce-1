@@ -1,4 +1,4 @@
-const API_URL = "https://script.google.com/macros/s/AKfycbxzvKCqFkyeebsByJH2o_yr7jHApv923P3cpnJ9v26WbHUduOuymVh1PF35A2heMe9v/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbxiNKjWojP_0vvT6po0cosyFceSjlEEnb_d9Nql9kQjl2pyPoVOJnXW6D7wgvO8xpItSw/exec";
 const ČLANI = ["Franci", "Zvonka", "Gašper", "Mitja", "David", "Filip", "Erik", "Saša", "Urška Š.", "Urška M."];
 const CROWNS = ["Franci", "Zvonka"];
 const LS_KEY = "aktivna_seja";
@@ -10,6 +10,12 @@ const ICON_WALLET  = `<svg class="icon" width="16" height="16" viewBox="0 0 24 2
 const ICON_HARDHAT = `<svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 18a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v2z"/><path d="M10 10V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5"/><path d="M4 15v-3a8 8 0 0 1 16 0v3"/></svg>`;
 const ICON_CHECK   = `<svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`;
 const ICON_X       = `<svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`;
+
+const ICON_CAMERA  = `<svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>`;
+const ICON_UPLOAD  = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>`;
+const ICON_ST_SPIN = `<span class="thumb-spinner"></span>`;
+const ICON_ST_OK   = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+const ICON_ST_ERR  = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
 
 // SVG icons for kategorije chips (14px, parallel to KATEGORIJE array)
 const KAT_SVG = [
@@ -82,11 +88,13 @@ function renderSelected() {
     <div class="action-buttons">
       <button class="btn btn-filled btn-large" id="btnStart">${ICON_PLAY} Začni beleženje ur</button>
       <button class="btn btn-outlined btn-large" id="btnStrosek">${ICON_WALLET} Dodaj strošek</button>
+      <button class="btn btn-outlined btn-large" id="btnFoto">${ICON_CAMERA} Dodaj foto / račun</button>
     </div>
     <button class="btn btn-text" id="btnCancel">Prekliči izbiro</button>
   `;
   document.getElementById("btnStart").addEventListener("click", startTimer);
   document.getElementById("btnStrosek").addEventListener("click", showStrosekModal);
+  document.getElementById("btnFoto").addEventListener("click", showFotoModal);
   document.getElementById("btnCancel").addEventListener("click", cancel);
 }
 
@@ -365,4 +373,232 @@ function formatDate(d) {
 
 function formatTime(d) {
   return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+}
+
+// ── Image helpers ──
+function compressImage(file, maxWidth = 1200, quality = 0.82) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      const ratio = Math.min(maxWidth / img.width, 1);
+      canvas.width  = img.width  * ratio;
+      canvas.height = img.height * ratio;
+      canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(blob => resolve(blob), "image/jpeg", quality);
+    };
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+function blobToBase64(blob) {
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.readAsDataURL(blob);
+  });
+}
+
+// ── Modal: foto / račun ──
+function showFotoModal() {
+  let selectedFiles = [];
+  let selectedTip   = null;
+  let isUploading   = false;
+
+  const modal = document.createElement("div");
+  modal.id = "fotoModal";
+  modal.className = "modal-overlay";
+  modal.innerHTML = `
+    <div class="modal-card">
+      <h2 class="modal-title">${ICON_CAMERA} Dodaj foto / račun</h2>
+      <p class="modal-subtitle">Izberi vrsto in dodaj slike</p>
+
+      <div class="chip-grid" style="grid-template-columns:1fr 1fr">
+        <button class="chip" data-tip="racun">🧾 Račun</button>
+        <button class="chip" data-tip="slike">📷 Gradbišče</button>
+      </div>
+
+      <div id="fotoUploadSection" style="display:none;width:100%">
+        <div class="upload-zone" id="fotoUploadZone">
+          ${ICON_UPLOAD}
+          <span class="upload-zone-text">Fotografiraj ali izberi iz galerije</span>
+        </div>
+        <input type="file" id="fotoFileInput" accept="image/*" capture="environment" multiple style="display:none">
+        <div class="thumb-strip" id="fotoThumbs"></div>
+        <input class="modal-input" id="fotoOpis" type="text" placeholder="Kratek opis (neobvezno)" maxlength="60" style="display:none;margin-top:4px">
+      </div>
+
+      <div id="fotoBtns" style="display:flex;flex-direction:column;gap:8px;width:100%">
+        <button class="btn btn-filled btn-large" id="btnFotoUpload" disabled>${ICON_CAMERA} Naloži slike</button>
+        <button class="btn btn-secondary modal-skip" id="btnFotoCancel">Prekliči</button>
+      </div>
+
+      <div id="fotoProgressArea" style="display:none;width:100%">
+        <div class="foto-progress-text" id="fotoProgressText">Pripravljam…</div>
+        <div class="progress-track"><div class="progress-fill" id="fotoProgressFill" style="width:0%"></div></div>
+      </div>
+
+      <div id="fotoResultArea" style="display:none;width:100%">
+        <div class="foto-result" id="fotoResultCard"></div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+          <button class="btn btn-outlined btn-large" id="btnFotoMore">Dodaj še</button>
+          <button class="btn btn-text" id="btnFotoClose">Zapri</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  // ── helpers ──
+  function updateUploadBtn() {
+    const btn = document.getElementById("btnFotoUpload");
+    const n   = selectedFiles.length;
+    btn.disabled = (n === 0 || !selectedTip);
+    const label = n === 0  ? "Naloži slike"
+      : n === 1            ? "Naloži 1 sliko"
+      : n < 5              ? `Naloži ${n} slike`
+      :                      `Naloži ${n} slik`;
+    btn.innerHTML = `${ICON_CAMERA} ${label}`;
+  }
+
+  function renderThumbs() {
+    const strip = document.getElementById("fotoThumbs");
+    strip.innerHTML = selectedFiles.map((f, i) => `
+      <div class="thumb-item">
+        <img class="thumb-img" src="${URL.createObjectURL(f)}" alt="">
+        <div class="thumb-status" id="fotoSt${i}">⏳</div>
+      </div>
+    `).join("");
+  }
+
+  function resetFotoState() {
+    selectedFiles = [];
+    selectedTip   = null;
+    isUploading   = false;
+    modal.querySelectorAll(".chip").forEach(c => c.classList.remove("selected"));
+    document.getElementById("fotoUploadSection").style.display  = "none";
+    document.getElementById("fotoThumbs").innerHTML             = "";
+    const opisEl = document.getElementById("fotoOpis");
+    opisEl.style.display = "none";
+    opisEl.value         = "";
+    document.getElementById("fotoFileInput").value              = "";
+    document.getElementById("fotoProgressArea").style.display   = "none";
+    document.getElementById("fotoProgressFill").style.width     = "0%";
+    document.getElementById("fotoResultArea").style.display     = "none";
+    document.getElementById("fotoBtns").style.display           = "flex";
+    updateUploadBtn();
+  }
+
+  // ── Type chip — single select ──
+  modal.querySelectorAll(".chip").forEach(chip => {
+    chip.addEventListener("click", () => {
+      modal.querySelectorAll(".chip").forEach(c => c.classList.remove("selected"));
+      chip.classList.add("selected");
+      selectedTip = chip.dataset.tip;
+      const sec = document.getElementById("fotoUploadSection");
+      sec.style.display        = "flex";
+      sec.style.flexDirection  = "column";
+      sec.style.gap            = "12px";
+      updateUploadBtn();
+    });
+  });
+
+  // ── Upload zone → file picker ──
+  document.getElementById("fotoUploadZone").addEventListener("click", () => {
+    document.getElementById("fotoFileInput").click();
+  });
+
+  // ── File selection ──
+  document.getElementById("fotoFileInput").addEventListener("change", e => {
+    selectedFiles = Array.from(e.target.files);
+    if (!selectedFiles.length) return;
+    renderThumbs();
+    document.getElementById("fotoOpis").style.display = "block";
+    updateUploadBtn();
+  });
+
+  // ── Cancel ──
+  document.getElementById("btnFotoCancel").addEventListener("click", () => {
+    if (!isUploading) closeModal("fotoModal");
+  });
+
+  // ── Upload ──
+  document.getElementById("btnFotoUpload").addEventListener("click", async () => {
+    if (!selectedFiles.length || !selectedTip || isUploading) return;
+    isUploading = true;
+
+    document.getElementById("fotoBtns").style.display = "none";
+    const progressArea = document.getElementById("fotoProgressArea");
+    progressArea.style.display        = "flex";
+    progressArea.style.flexDirection  = "column";
+    progressArea.style.gap            = "10px";
+
+    const opis  = document.getElementById("fotoOpis").value.trim();
+    const total = selectedFiles.length;
+    let succeeded = 0;
+    let failed    = 0;
+
+    for (let i = 0; i < total; i++) {
+      document.getElementById("fotoProgressText").textContent = `Nalagam sliko ${i + 1} od ${total}…`;
+      const stEl = document.getElementById(`fotoSt${i}`);
+      if (stEl) stEl.innerHTML = ICON_ST_SPIN;
+
+      try {
+        const compressed  = await compressImage(selectedFiles[i]);
+        const base64data  = await blobToBase64(compressed);
+        const controller  = new AbortController();
+        const timer       = setTimeout(() => controller.abort(), 45000);
+
+        await fetch(API_URL, {
+          method:  "POST",
+          headers: { "Content-Type": "application/json" },
+          body:    JSON.stringify({
+            type:     "foto",
+            tip:      selectedTip,
+            base64:   base64data,
+            mimeType: "image/jpeg",
+            datum:    formatDate(new Date()),
+            opis,
+            ime:      selectedMember
+          }),
+          mode:   "no-cors",
+          signal: controller.signal
+        });
+
+        clearTimeout(timer);
+        if (stEl) stEl.innerHTML = ICON_ST_OK;
+        succeeded++;
+      } catch {
+        if (stEl) stEl.innerHTML = ICON_ST_ERR;
+        failed++;
+      }
+
+      document.getElementById("fotoProgressFill").style.width = `${((i + 1) / total) * 100}%`;
+    }
+
+    // ── Show result ──
+    document.getElementById("fotoProgressArea").style.display = "none";
+    const resultArea = document.getElementById("fotoResultArea");
+    resultArea.style.display = "block";
+
+    const card = document.getElementById("fotoResultCard");
+    if (failed === 0) {
+      card.className   = "foto-result success";
+      card.innerHTML   = `${ICON_CHECK} ${succeeded}/${total} ${total === 1 ? "slika naložena" : "slik naloženih"} v Google Drive`;
+    } else if (succeeded > 0) {
+      card.className   = "foto-result partial";
+      card.innerHTML   = `⚠️ ${succeeded}/${total} slik naloženih — ${failed} ni ${failed === 1 ? "uspela" : "uspele"}`;
+    } else {
+      card.className   = "foto-result error";
+      card.innerHTML   = `${ICON_X} Nalaganje ni uspelo`;
+    }
+
+    isUploading = false;
+  });
+
+  // ── Dodaj še ──
+  document.getElementById("btnFotoMore").addEventListener("click", resetFotoState);
+
+  // ── Zapri ──
+  document.getElementById("btnFotoClose").addEventListener("click", () => closeModal("fotoModal"));
 }
