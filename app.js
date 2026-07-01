@@ -13,6 +13,7 @@ const ICON_X       = `<svg class="icon" width="16" height="16" viewBox="0 0 24 2
 
 const ICON_CAMERA  = `<svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>`;
 const ICON_UPLOAD  = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>`;
+const ICON_GALLERY = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>`;
 const ICON_ST_SPIN = `<span class="thumb-spinner"></span>`;
 const ICON_ST_OK   = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
 const ICON_ST_ERR  = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
@@ -419,11 +420,18 @@ function showFotoModal() {
       </div>
 
       <div id="fotoUploadSection" style="display:none;width:100%">
-        <div class="upload-zone" id="fotoUploadZone">
-          ${ICON_UPLOAD}
-          <span class="upload-zone-text">Fotografiraj ali izberi iz galerije</span>
+        <div class="foto-pick-grid">
+          <button class="foto-pick-btn" id="btnFotoCamera">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+            <span>Fotografiraj</span>
+          </button>
+          <button class="foto-pick-btn" id="btnFotoGallery">
+            ${ICON_GALLERY}
+            <span>Iz galerije</span>
+          </button>
         </div>
-        <input type="file" id="fotoFileInput" accept="image/*" capture="environment" multiple style="display:none">
+        <input type="file" id="fotoCameraInput" accept="image/*" capture="environment" style="display:none">
+        <input type="file" id="fotoGalleryInput" accept="image/*" multiple style="display:none">
         <div class="thumb-strip" id="fotoThumbs"></div>
         <input class="modal-input" id="fotoOpis" type="text" placeholder="Kratek opis (neobvezno)" maxlength="60" style="display:none;margin-top:4px">
       </div>
@@ -481,7 +489,8 @@ function showFotoModal() {
     const opisEl = document.getElementById("fotoOpis");
     opisEl.style.display = "none";
     opisEl.value         = "";
-    document.getElementById("fotoFileInput").value              = "";
+    document.getElementById("fotoCameraInput").value            = "";
+    document.getElementById("fotoGalleryInput").value           = "";
     document.getElementById("fotoProgressArea").style.display   = "none";
     document.getElementById("fotoProgressFill").style.width     = "0%";
     document.getElementById("fotoResultArea").style.display     = "none";
@@ -503,19 +512,25 @@ function showFotoModal() {
     });
   });
 
-  // ── Upload zone → file picker ──
-  document.getElementById("fotoUploadZone").addEventListener("click", () => {
-    document.getElementById("fotoFileInput").click();
+  // ── Pick buttons → file inputs ──
+  document.getElementById("btnFotoCamera").addEventListener("click", () => {
+    document.getElementById("fotoCameraInput").click();
+  });
+  document.getElementById("btnFotoGallery").addEventListener("click", () => {
+    document.getElementById("fotoGalleryInput").click();
   });
 
-  // ── File selection ──
-  document.getElementById("fotoFileInput").addEventListener("change", e => {
-    selectedFiles = Array.from(e.target.files);
-    if (!selectedFiles.length) return;
+  // ── File selection (accumulating from both inputs) ──
+  function handleFileAdded(e) {
+    const added = Array.from(e.target.files);
+    if (!added.length) return;
+    selectedFiles = [...selectedFiles, ...added];
     renderThumbs();
     document.getElementById("fotoOpis").style.display = "block";
     updateUploadBtn();
-  });
+  }
+  document.getElementById("fotoCameraInput").addEventListener("change", handleFileAdded);
+  document.getElementById("fotoGalleryInput").addEventListener("change", handleFileAdded);
 
   // ── Cancel ──
   document.getElementById("btnFotoCancel").addEventListener("click", () => {
