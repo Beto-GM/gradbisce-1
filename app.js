@@ -5,6 +5,7 @@ const LS_KEY = "aktivna_seja";
 
 // ── SVG icon constants (Lucide-style, stroke-based, currentColor) ──
 const ICON_PLAY    = `<svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
+const ICON_PAUSE   = `<svg class="icon" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>`;
 const ICON_STOP    = `<svg class="icon" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/></svg>`;
 const ICON_WALLET  = `<svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg>`;
 const ICON_HARDHAT = `<svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 18a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v2z"/><path d="M10 10V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5"/><path d="M4 15v-3a8 8 0 0 1 16 0v3"/></svg>`;
@@ -28,9 +29,12 @@ const KAT_SVG = [
   `<svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16.5 9.4 7.55 4.24"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>`,
 ];
 
-let selectedMember = null;
-let timerInterval = null;
-let sessionStart = null;
+let selectedMember  = null;
+let timerInterval   = null;
+let sessionStart    = null;
+let pausedDuration  = 0;     // accumulated ms of all pauses
+let pauseStart      = null;  // Date.now() when current pause began
+let isPaused        = false;
 
 // ── Build member grid ──
 const grid = document.getElementById("memberGrid");
@@ -53,9 +57,12 @@ const grid = document.getElementById("memberGrid");
 const saved = localStorage.getItem(LS_KEY);
 if (saved) {
   try {
-    const { ime, zacetek_timestamp } = JSON.parse(saved);
+    const { ime, zacetek_timestamp, pausedDuration: pd, pauseStart: ps, isPaused: ip } = JSON.parse(saved);
     selectedMember = ime;
-    sessionStart = new Date(zacetek_timestamp);
+    sessionStart   = new Date(zacetek_timestamp);
+    pausedDuration = pd || 0;
+    pauseStart     = ps || null;
+    isPaused       = !!ip;
     highlightMember(ime);
     renderTimerRunning();
   } catch {
@@ -64,7 +71,7 @@ if (saved) {
 }
 
 function selectMember(ime) {
-  if (timerInterval) return;
+  if (sessionStart) return;  // running or paused
   selectedMember = ime;
   highlightMember(ime);
   renderSelected();
@@ -76,7 +83,9 @@ function highlightMember(ime) {
     b.classList.toggle("active", active);
     const statusEl = b.querySelector(".member-status");
     if (statusEl) {
-      statusEl.textContent = (active && timerInterval) ? "● Dela..." : "Prosto";
+      statusEl.textContent = active && (timerInterval || isPaused)
+        ? (isPaused ? "⏸ Pavza" : "● Dela...")
+        : "Prosto";
     }
   });
 }
@@ -105,17 +114,30 @@ function cancel() {
   document.getElementById("actionArea").innerHTML = `<p class="placeholder">Izberi svoje ime za začetek</p>`;
 }
 
-// ── Stanje 3: timer teče ──
+// ── Stanje 3 / 4: timer teče / pavza ──
+function saveLsState() {
+  localStorage.setItem(LS_KEY, JSON.stringify({
+    ime: selectedMember,
+    zacetek_timestamp: sessionStart.toISOString(),
+    pausedDuration,
+    pauseStart,
+    isPaused
+  }));
+}
+
 function startTimer() {
-  sessionStart = new Date();
-  localStorage.setItem(LS_KEY, JSON.stringify({ ime: selectedMember, zacetek_timestamp: sessionStart.toISOString() }));
+  sessionStart   = new Date();
+  pausedDuration = 0;
+  pauseStart     = null;
+  isPaused       = false;
+  saveLsState();
   renderTimerRunning();
 }
 
 function renderTimerRunning() {
   const area = document.getElementById("actionArea");
   const zacetekStr = formatTime(sessionStart);
-  const datumStr = formatDate(sessionStart);
+  const datumStr   = formatDate(sessionStart);
 
   area.innerHTML = `
     <span class="session-label">Aktivna seja</span>
@@ -124,10 +146,13 @@ function renderTimerRunning() {
       <div class="timer-display" id="timerDisplay">00:00:00</div>
       <div class="start-info">Začetek ob ${zacetekStr} · ${datumStr}</div>
     </div>
-    <div class="recording-indicator">
+    <div id="recordingIndicator" class="recording-indicator">
       <span class="pulse-dot"></span> SNEMAM
     </div>
-    <button class="btn btn-danger btn-large" id="btnStop">${ICON_STOP} ZAKLJUČI DELO</button>
+    <div class="timer-top-btns">
+      <button class="btn btn-outlined btn-large" id="btnPause">${ICON_PAUSE} Pavza</button>
+      <button class="btn btn-danger btn-large" id="btnStop">${ICON_STOP} Zaključi</button>
+    </div>
     <div class="timer-secondary-btns">
       <button class="btn-timer-secondary" id="btnTimerStrosek">${ICON_WALLET} Strošek med delom</button>
       <button class="btn-timer-secondary" id="btnTimerFoto">${ICON_CAMERA} Foto med delom</button>
@@ -135,10 +160,64 @@ function renderTimerRunning() {
     <p class="warning-text">⚠️ Ne zapri okna med delom!</p>
   `;
 
+  document.getElementById("btnPause").addEventListener("click", () => isPaused ? resumeTimer() : pauseTimer());
   document.getElementById("btnStop").addEventListener("click", stopTimer);
   document.getElementById("btnTimerStrosek").addEventListener("click", () => showStrosekModal(true));
   document.getElementById("btnTimerFoto").addEventListener("click", showFotoModal);
 
+  if (isPaused) {
+    applyPausedVisuals();
+    tickTimer();  // show frozen elapsed time once
+  } else {
+    clearInterval(timerInterval);
+    timerInterval = setInterval(tickTimer, 1000);
+    tickTimer();
+  }
+  highlightMember(selectedMember);
+}
+
+function applyPausedVisuals() {
+  const display = document.getElementById("timerDisplay");
+  if (display) {
+    display.style.background  = "#E8DDD0";
+    display.style.color       = "var(--text-muted)";
+  }
+  const indicator = document.getElementById("recordingIndicator");
+  if (indicator) indicator.innerHTML = `<span style="color:#B8864E">${ICON_PAUSE} PAVZA</span>`;
+  const btnPause = document.getElementById("btnPause");
+  if (btnPause) btnPause.innerHTML = `${ICON_PLAY} Nadaljuj delo`;
+}
+
+function applyRunningVisuals() {
+  const display = document.getElementById("timerDisplay");
+  if (display) {
+    display.style.background = "";
+    display.style.color      = "";
+  }
+  const indicator = document.getElementById("recordingIndicator");
+  if (indicator) indicator.innerHTML = `<span class="pulse-dot"></span> SNEMAM`;
+  const btnPause = document.getElementById("btnPause");
+  if (btnPause) btnPause.innerHTML = `${ICON_PAUSE} Pavza`;
+}
+
+function pauseTimer() {
+  if (isPaused) return;
+  isPaused   = true;
+  pauseStart = Date.now();
+  clearInterval(timerInterval);
+  timerInterval = null;
+  saveLsState();
+  applyPausedVisuals();
+  highlightMember(selectedMember);
+}
+
+function resumeTimer() {
+  if (!isPaused) return;
+  pausedDuration += Date.now() - pauseStart;
+  pauseStart     = null;
+  isPaused       = false;
+  saveLsState();
+  applyRunningVisuals();
   clearInterval(timerInterval);
   timerInterval = setInterval(tickTimer, 1000);
   tickTimer();
@@ -146,7 +225,8 @@ function renderTimerRunning() {
 }
 
 function tickTimer() {
-  const elapsed = Math.floor((Date.now() - sessionStart.getTime()) / 1000);
+  const currentPauseMs = (isPaused && pauseStart) ? (Date.now() - pauseStart) : 0;
+  const elapsed = Math.floor((Date.now() - sessionStart.getTime() - pausedDuration - currentPauseMs) / 1000);
   const h = String(Math.floor(elapsed / 3600)).padStart(2, "0");
   const m = String(Math.floor((elapsed % 3600) / 60)).padStart(2, "0");
   const s = String(elapsed % 60).padStart(2, "0");
@@ -160,10 +240,11 @@ function stopTimer() {
   timerInterval = null;
 
   const konec = new Date();
-  const diffMs = konec - sessionStart;
-  const ure = Math.round((diffMs / 3600000) * 100) / 100;
+  const totalPausedMs = pausedDuration + (isPaused && pauseStart ? Date.now() - pauseStart : 0);
+  const diffMs  = (konec - sessionStart) - totalPausedMs;
+  const ure     = Math.round((diffMs / 3600000) * 100) / 100;
   const totalMin = Math.floor(diffMs / 60000);
-  const prikazH = Math.floor(totalMin / 60);
+  const prikazH  = Math.floor(totalMin / 60);
   const prikazMin = totalMin % 60;
 
   const basePayload = {
@@ -367,7 +448,10 @@ async function sendStrosekPayload(predmet, vrednost, duringTimer = false) {
 
 function resetAll() {
   selectedMember = null;
-  sessionStart = null;
+  sessionStart   = null;
+  pausedDuration = 0;
+  pauseStart     = null;
+  isPaused       = false;
   highlightMember(null);
   document.getElementById("actionArea").innerHTML = `<p class="placeholder">Izberi svoje ime za začetek</p>`;
 }

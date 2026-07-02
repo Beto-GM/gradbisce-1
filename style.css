@@ -252,6 +252,9 @@ body {
   line-height: 1;
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum";
+  transition: background 0.3s ease, color 0.3s ease;
+  border-radius: 8px;
+  padding: 2px 6px;
 }
 .timer-display.muted { color: var(--timer-muted); }
 .start-info {
@@ -714,6 +717,14 @@ tr:nth-child(even) td { background: #FFF8F2; }
 .tab-btn:hover { color: var(--text-primary); }
 .tab-btn:active { opacity: 0.75; }
 .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* ── Timer top button row (Pavza + Zaključi) ── */
+.timer-top-btns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  width: 100%;
+}
 
 /* ── Timer secondary buttons (Stanje 3) ── */
 .timer-secondary-btns {
