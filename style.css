@@ -715,6 +715,34 @@ tr:nth-child(even) td { background: #FFF8F2; }
 .tab-btn:active { opacity: 0.75; }
 .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
 
+/* ── Timer secondary buttons (Stanje 3) ── */
+.timer-secondary-btns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  width: 100%;
+}
+.btn-timer-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: transparent;
+  border: 1.5px solid var(--accent);
+  color: var(--accent);
+  border-radius: 10px;
+  padding: 10px 14px;
+  min-height: 44px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.12s ease;
+}
+.btn-timer-secondary:hover { background: var(--accent-light); }
+.btn-timer-secondary:active { transform: scale(0.97); }
+.btn-timer-secondary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
 /* ── Action buttons (Stanje 2) ── */
 .action-buttons {
   display: flex;

@@ -128,10 +128,16 @@ function renderTimerRunning() {
       <span class="pulse-dot"></span> SNEMAM
     </div>
     <button class="btn btn-danger btn-large" id="btnStop">${ICON_STOP} ZAKLJUČI DELO</button>
+    <div class="timer-secondary-btns">
+      <button class="btn-timer-secondary" id="btnTimerStrosek">${ICON_WALLET} Strošek med delom</button>
+      <button class="btn-timer-secondary" id="btnTimerFoto">${ICON_CAMERA} Foto med delom</button>
+    </div>
     <p class="warning-text">⚠️ Ne zapri okna med delom!</p>
   `;
 
   document.getElementById("btnStop").addEventListener("click", stopTimer);
+  document.getElementById("btnTimerStrosek").addEventListener("click", () => showStrosekModal(true));
+  document.getElementById("btnTimerFoto").addEventListener("click", showFotoModal);
 
   clearInterval(timerInterval);
   timerInterval = setInterval(tickTimer, 1000);
@@ -222,7 +228,7 @@ const KATEGORIJE = [
   "🏠 Izolacija", "🚗 Transport", "📦 Material razno"
 ];
 
-function showStrosekModal() {
+function showStrosekModal(duringTimer = false) {
   const modal = document.createElement("div");
   modal.id = "strosekModal";
   modal.className = "modal-overlay";
@@ -262,12 +268,12 @@ function showStrosekModal() {
     const predmet = document.getElementById("strosekOpis").value.trim();
     const vrednost = parseFloat(znesekInput.value);
     closeModal("strosekModal");
-    sendStrosekPayload(predmet, vrednost);
+    sendStrosekPayload(predmet, vrednost, duringTimer);
   });
 
   document.getElementById("btnStrosekCancel").addEventListener("click", () => {
     closeModal("strosekModal");
-    renderSelected();
+    if (!duringTimer) renderSelected();
   });
 }
 
@@ -314,7 +320,7 @@ async function sendUrePayload(payload, prikazH, prikazMin) {
 }
 
 // ── Pošlji strošek na API ──
-async function sendStrosekPayload(predmet, vrednost) {
+async function sendStrosekPayload(predmet, vrednost, duringTimer = false) {
   const area = document.getElementById("actionArea");
   area.innerHTML = `
     <div class="selected-name">${selectedMember}</div>
@@ -345,7 +351,7 @@ async function sendStrosekPayload(predmet, vrednost) {
         ${ICON_CHECK} Strošek shranjen!<br>${selectedMember}: ${prikazPredmet} — ${vrednost.toFixed(2)} €
       </div>
     `;
-    setTimeout(resetAll, 3000);
+    setTimeout(duringTimer ? renderTimerRunning : resetAll, duringTimer ? 2000 : 3000);
   } catch (err) {
     area.innerHTML = `
       <div class="result-card error">
@@ -353,7 +359,9 @@ async function sendStrosekPayload(predmet, vrednost) {
       </div>
       <button class="btn btn-danger" id="btnRetryS">Poskusi znova</button>
     `;
-    document.getElementById("btnRetryS").addEventListener("click", () => renderSelected());
+    document.getElementById("btnRetryS").addEventListener("click",
+      () => duringTimer ? renderTimerRunning() : renderSelected()
+    );
   }
 }
 
